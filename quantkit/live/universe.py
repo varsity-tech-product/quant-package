@@ -31,6 +31,7 @@ async def resolve_universe(spec: dict) -> list[str]:
 
 
 async def _cmc_top_n(top_n: int) -> list[str]:
+    # cmc top n
     if not config.CMC_API_KEY:
         raise RuntimeError("universe.mode=cmc_top_n 需要 CMC_API_KEY")
 
