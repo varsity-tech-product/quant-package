@@ -19,6 +19,7 @@ logger = logging.getLogger("universe")
 
 
 async def resolve_universe(spec: dict) -> list[str]:
+    # resolve universe
     mode = spec.get("mode", "cmc_top_n")
     if mode == "manual":
         symbols = [s.upper() for s in spec["symbols"]]
