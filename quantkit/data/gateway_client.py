@@ -150,6 +150,7 @@ class GatewayClient:
 
 
 def _to_float(v: Any) -> float:
+    # to float
     if v is None or v == "":
         return float("nan")
     try:
