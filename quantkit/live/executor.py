@@ -341,6 +341,7 @@ class BinanceFuturesExecutor:
         quantity: float,
         step_size: float,
     ) -> None:
+        # 核心下单逻辑：限价单挂盘口 → 等待成交 → 超时撤单 → 剩余市价兜底
         """
         核心下单逻辑：限价单挂盘口 → 等待成交 → 超时撤单 → 剩余市价兜底
         BUY 挂 bestBid，SELL 挂 bestAsk，做 Maker 省手续费
