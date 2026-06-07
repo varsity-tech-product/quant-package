@@ -220,6 +220,7 @@ class BinanceFuturesExecutor:
         logger.debug("设置 %s 杠杆 %dx", symbol, leverage)
 
     def _round_price(self, price: float, tick_size: float) -> float:
+        # 按 tickSize 取整价格
         """按 tickSize 取整价格"""
         decimals = max(0, round(-math.log10(tick_size))) if tick_size < 1 else 0
         return round(math.floor(price / tick_size) * tick_size, decimals)
