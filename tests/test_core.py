@@ -75,6 +75,7 @@ def test_cross_section_zscore():
 
 
 def test_target_weights_neutral():
+    # test target weights neutral
     f1 = WeightedFactor(load_plugin(ROOT / "example_plugin/flow_confirmed_smooth_trend_momentum.py"), 0.6)
     f2 = WeightedFactor(load_plugin(ROOT / "example_plugin/trade_size_toxicity_flow_persistence.py"), 0.4)
     bars = _bars(["A", "B", "C", "D", "E", "F"])
