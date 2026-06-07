@@ -97,6 +97,7 @@ def load_plugin(path: str | Path) -> FactorPlugin:
 
 
 def all_required_fields(plugins: list[FactorPlugin]) -> set[str]:
+    # 一组 plugin 合并后需要的全部数据字段（含隐含的 close）。
     """一组 plugin 合并后需要的全部数据字段（含隐含的 close）。"""
     fields: set[str] = {"close"}
     for p in plugins:
