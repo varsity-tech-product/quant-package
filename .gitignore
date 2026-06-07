@@ -5,6 +5,8 @@ __pycache__/
 venv/
 *.egg-info/
 .DS_Store
-data/
-logs/
-logs_dev/
+# 运行时产物（实盘引擎在 live 工作目录下生成），注意不要忽略 quantkit/data/ 源码包
+quantkit/live/data/
+quantkit/live/logs/
+/runtime_data/
+*.log
