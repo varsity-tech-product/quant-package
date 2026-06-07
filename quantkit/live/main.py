@@ -57,6 +57,7 @@ def preflight(strategy: StrategyConfig) -> None:
 
 
 async def _run_once(strategy, executor, gateway) -> None:
+    # run once
     try:
         await run_daily_rebalance(strategy, executor, gateway)
     except Exception as e:
