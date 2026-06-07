@@ -73,6 +73,7 @@ def commit_count() -> int:
 
 
 def main(argv: list[str] | None = None) -> int:
+    # main
     argv = argv if argv is not None else sys.argv[1:]
     if not argv:
         print("usage: python -m quantkit.git_commit <message> [path ...]", file=sys.stderr)
