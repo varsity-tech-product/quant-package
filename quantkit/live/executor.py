@@ -317,6 +317,7 @@ class BinanceFuturesExecutor:
                 return await resp.json()
 
     async def cancel_order(self, symbol: str, order_id: int) -> dict:
+        # 撤单
         """撤单"""
         params = {"symbol": symbol, "orderId": order_id, "timestamp": _ts()}
         params["signature"] = _sign(params)
