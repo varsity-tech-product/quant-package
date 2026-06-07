@@ -111,6 +111,7 @@ class BacktestClient:
         taker_fee_rate: float | None = None,
         maker_fee_rate: float | None = None,
     ) -> dict:
+        # 提交截面策略 ``POST /strategies/submit``。
         """提交截面策略 ``POST /strategies/submit``。"""
         self._validate(factors, weighting)
         body: dict[str, Any] = {
