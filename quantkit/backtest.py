@@ -174,6 +174,7 @@ class BacktestClient:
         return self._request("GET", f"/strategies/{strategy_id}/result")
 
     def list_strategies(self, limit: int = 20, offset: int = 0) -> dict:
+        # list strategies
         return self._request("GET", f"/strategies?limit={limit}&offset={offset}")
 
     # ── 轮询直到完成 ─────────────────────────────────────────────────────────
