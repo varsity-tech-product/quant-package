@@ -35,6 +35,7 @@ def compute_target_weights(
     *,
     features: dict[str, pd.DataFrame] | None = None,
 ) -> tuple[pd.Series, dict]:
+    # 从策略配置 + 行情面板，算最新截面目标权重。
     """从策略配置 + 行情面板，算最新截面目标权重。"""
     factors = build_weighted_factors(strategy)
     weights, debug = target_weights(
