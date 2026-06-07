@@ -68,6 +68,7 @@ class BinanceFuturesExecutor:
         )
 
     async def ensure_one_way_mode(self) -> None:
+        # 确保账户为单向持仓模式（非 Hedge Mode），避免 -4061 错误
         """确保账户为单向持仓模式（非 Hedge Mode），避免 -4061 错误"""
         if self._position_mode_set:
             return
