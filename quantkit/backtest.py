@@ -162,6 +162,7 @@ class BacktestClient:
         return self._request("GET", f"/strategies/{strategy_id}/summary")
 
     def equity_curve(self, strategy_id: str) -> dict:
+        # equity curve
         return self._request("GET", f"/strategies/{strategy_id}/equity_curve")
 
     def orders(self, strategy_id: str) -> dict:
