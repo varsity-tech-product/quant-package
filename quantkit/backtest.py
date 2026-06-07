@@ -59,6 +59,7 @@ class BacktestClient:
 
     # ── HTTP 底层 ────────────────────────────────────────────────────────────
     def _request(self, method: str, path: str, body: dict | None = None) -> Any:
+        # request
         url = f"{self.base}{path}"
         data = json.dumps(body).encode() if body is not None else None
         req = urllib.request.Request(url, data=data, method=method)
