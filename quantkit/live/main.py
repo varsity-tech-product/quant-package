@@ -65,6 +65,7 @@ async def _run_once(strategy, executor, gateway) -> None:
 
 
 async def main_async(strategy_path: str, once: bool) -> None:
+    # main async
     setup_logging()
     logger.info("quantkit live 启动")
     strategy = StrategyConfig.load(strategy_path)
