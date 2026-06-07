@@ -191,6 +191,7 @@ def build_signal(
     taker_sell_trades: pd.DataFrame,
     **_kwargs,
 ) -> pd.DataFrame:
+    # build signal
     flow_window = int(params.get("flow_window", 18))
     baseline_window = int(params.get("baseline_window", 72))
     smooth_window = int(params.get("smooth_window", 8))
