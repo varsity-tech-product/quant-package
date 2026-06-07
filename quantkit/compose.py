@@ -110,6 +110,7 @@ def cross_section_weights(
 
 
 def _resolve_k(ranking: dict, n: int) -> int:
+    # resolve k
     mode = ranking.get("mode")
     value = ranking.get("value")
     if mode == "N":
