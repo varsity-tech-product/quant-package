@@ -241,6 +241,7 @@ def build_signal(
     top_account_short_percent: pd.DataFrame,
     **_kwargs,
 ) -> pd.DataFrame:
+    # build signal
     short_window = int(params.get("short_window", 12))
     long_window = int(params.get("long_window", 72))
     trend_window = int(params.get("trend_window", 24))
