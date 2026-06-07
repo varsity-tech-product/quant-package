@@ -41,6 +41,7 @@ _BAR_FIELD_ALIASES = {
 
 
 def _load_ref_client(gateway_dir: str | Path):
+    # 把 exchange-gateway 的 ref client import 进来。
     """把 exchange-gateway 的 ref client import 进来。"""
     gateway_dir = Path(gateway_dir).expanduser().resolve()
     client_dir = gateway_dir / "examples" / "marketdata-fetch-client"
