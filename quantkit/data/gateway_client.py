@@ -124,6 +124,7 @@ class GatewayClient:
         return df
 
     def fetch_bars_panel(self, symbols: list[str], limit: int = 1000) -> dict[str, pd.DataFrame]:
+        # 批量取多个 symbol 的 1d bars，返回 {symbol: DataFrame}。取不到的跳过。
         """批量取多个 symbol 的 1d bars，返回 {symbol: DataFrame}。取不到的跳过。"""
         out: dict[str, pd.DataFrame] = {}
         for sym in symbols:
