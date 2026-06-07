@@ -36,6 +36,7 @@ logger = logging.getLogger("executor")
 
 
 def _sign(params: dict) -> str:
+    # sign
     query = urlencode(params)
     return hmac.new(
         BINANCE_API_SECRET.encode(),
