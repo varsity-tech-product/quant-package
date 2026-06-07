@@ -29,6 +29,7 @@ def _field_table(
     bars_panel: dict[str, pd.DataFrame],
     features: dict[str, pd.DataFrame] | None,
 ) -> pd.DataFrame:
+    # 把所有 symbol 在某个字段上的列拼成一张 [date x symbol] 表。
     """把所有 symbol 在某个字段上的列拼成一张 [date x symbol] 表。"""
     series: dict[str, pd.Series] = {}
     for sym, df in bars_panel.items():
