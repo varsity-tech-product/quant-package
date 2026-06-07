@@ -54,6 +54,7 @@ def build_panels(
     *,
     features: dict[str, pd.DataFrame] | None = None,
 ) -> dict[str, pd.DataFrame]:
+    # 为单个 plugin 构建它需要的所有面板（含 close）。
     """为单个 plugin 构建它需要的所有面板（含 close）。
 
     所有面板对齐到共同的日期 index 和 symbol columns。
