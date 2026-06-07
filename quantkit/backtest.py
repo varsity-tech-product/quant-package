@@ -78,6 +78,7 @@ class BacktestClient:
     # ── 本地校验 ─────────────────────────────────────────────────────────────
     @staticmethod
     def _validate(factors: list[Factor], weighting: dict | None) -> None:
+        # validate
         if not 1 <= len(factors) <= MAX_FACTORS:
             raise ValueError(f"factors 数量必须 1..{MAX_FACTORS}，当前 {len(factors)}")
         seen = set()
