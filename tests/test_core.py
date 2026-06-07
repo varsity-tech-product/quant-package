@@ -56,6 +56,7 @@ def test_required_fields():
 
 
 def test_build_signal_runs():
+    # test build signal runs
     p = load_plugin(ROOT / "example_plugin/flow_confirmed_smooth_trend_momentum.py")
     bars = _bars(["A", "B", "C", "D"])
     panels = build_panels(p, bars)
