@@ -26,6 +26,7 @@ from .rebalancer import run_daily_rebalance
 
 
 def setup_logging() -> None:
+    # setup logging
     fmt = logging.Formatter("%(asctime)s [%(levelname)s] %(name)s: %(message)s",
                             datefmt="%Y-%m-%d %H:%M:%S")
     root = logging.getLogger()
