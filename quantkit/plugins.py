@@ -36,6 +36,7 @@ class FactorPlugin:
 
     @property
     def required_fields(self) -> list[str]:
+        # build_signal 需要的数据字段（除 close/params 外的具名参数）。
         """build_signal 需要的数据字段（除 close/params 外的具名参数）。
 
         例：flow_confirmed_smooth_trend_momentum ->
