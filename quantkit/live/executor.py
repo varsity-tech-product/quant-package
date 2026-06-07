@@ -272,6 +272,7 @@ class BinanceFuturesExecutor:
         quantity: float,
         step_size: float = 1.0,
     ) -> dict:
+        # 市价单（仅作为限价单超时后的兜底）
         """市价单（仅作为限价单超时后的兜底）"""
         decimals = max(0, round(-math.log10(step_size))) if step_size < 1 else 0
         qty_str = f"{quantity:.{decimals}f}"
