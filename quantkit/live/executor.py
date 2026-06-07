@@ -234,6 +234,7 @@ class BinanceFuturesExecutor:
         step_size: float = 1.0,
         tick_size: float = 0.01,
     ) -> dict:
+        # 挂限价单（GTC），返回订单信息
         """挂限价单（GTC），返回订单信息"""
         qty_decimals = max(0, round(-math.log10(step_size))) if step_size < 1 else 0
         price_decimals = max(0, round(-math.log10(tick_size))) if tick_size < 1 else 0
