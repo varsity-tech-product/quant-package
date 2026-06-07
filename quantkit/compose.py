@@ -45,6 +45,7 @@ def composite_signal(
     *,
     features: dict[str, pd.DataFrame] | None = None,
 ) -> pd.DataFrame:
+    # 合成 composite 信号 ``[date x symbol]``。
     """合成 composite 信号 ``[date x symbol]``。
 
     每个因子：build_signal -> 截面 z-score；再按归一化权重加权求和。
