@@ -83,6 +83,7 @@ def run_build_signal(
     features: dict[str, pd.DataFrame] | None = None,
     params: dict | None = None,
 ) -> pd.DataFrame:
+    # 构建面板并跑该 plugin 的 build_signal，返回信号 ``[date x symbol]``。
     """构建面板并跑该 plugin 的 build_signal，返回信号 ``[date x symbol]``。"""
     panels = build_panels(plugin, bars_panel, features=features)
     close = panels.pop("close")
