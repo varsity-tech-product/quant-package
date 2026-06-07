@@ -29,6 +29,7 @@ EXPECTED_FIELDS = {
 
 
 def _bars(symbols, n=120):
+    # bars
     idx = pd.date_range("2024-01-01", periods=n, freq="D", tz="UTC")
     out = {}
     for i, s in enumerate(symbols):
