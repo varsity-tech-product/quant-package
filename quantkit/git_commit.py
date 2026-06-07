@@ -35,6 +35,7 @@ def _run(args: list[str]) -> subprocess.CompletedProcess:
 
 
 def commit(message: str, paths: list[str] | None = None, *, allow_empty: bool = False) -> bool:
+    # 暂存并提交一次改动。
     """暂存并提交一次改动。
 
     Args:
