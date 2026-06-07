@@ -168,6 +168,7 @@ class BinanceFuturesExecutor:
         return float(data["bidPrice"]), float(data["askPrice"])
 
     async def get_symbol_info(self, symbol: str) -> dict:
+        # 获取合约最小下单精度
         """获取合约最小下单精度"""
         async with aiohttp.ClientSession() as s:
             async with s.get(
