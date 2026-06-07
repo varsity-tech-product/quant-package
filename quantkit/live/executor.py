@@ -302,6 +302,7 @@ class BinanceFuturesExecutor:
         return result
 
     async def get_order_status(self, symbol: str, order_id: int) -> dict:
+        # 查询订单状态
         """查询订单状态"""
         params = {"symbol": symbol, "orderId": order_id, "timestamp": _ts()}
         params["signature"] = _sign(params)
