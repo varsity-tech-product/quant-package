@@ -35,6 +35,7 @@ async def run_daily_rebalance(
     executor: BinanceFuturesExecutor,
     gateway: GatewayClient,
 ) -> None:
+    # 完整日度调仓。所有异常应由调用方捕获，不让进程崩溃。
     """完整日度调仓。所有异常应由调用方捕获，不让进程崩溃。"""
     run_time = datetime.now(timezone.utc)
     logger.info("=" * 60)
