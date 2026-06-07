@@ -155,6 +155,7 @@ class BinanceFuturesExecutor:
         return float(data["markPrice"])
 
     async def get_book_ticker(self, symbol: str) -> tuple[float, float]:
+        # 获取当前最优买卖价: (bestBid, bestAsk)
         """获取当前最优买卖价: (bestBid, bestAsk)"""
         async with aiohttp.ClientSession() as s:
             async with s.get(
