@@ -91,6 +91,7 @@ class GatewayClient:
 
     # ── 历史 1d K 线 ─────────────────────────────────────────────────────────
     def fetch_bars(self, symbol: str, limit: int = 1000) -> pd.DataFrame | None:
+        # 取单个 symbol 最近 ``limit`` 根已闭合 1d bars。
         """取单个 symbol 最近 ``limit`` 根已闭合 1d bars。
 
         失败关闭：有 ``statuses[]`` 或无 bars 时返回 None。
