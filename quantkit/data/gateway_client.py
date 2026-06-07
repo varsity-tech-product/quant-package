@@ -75,6 +75,7 @@ class GatewayClient:
 
     # ── readiness 健康检查 ───────────────────────────────────────────────────
     def is_ready(self, symbols: list[str], limit: int = 1000) -> dict[str, bool]:
+        # 逐 symbol 查 1d readiness，返回 {symbol: ready}。
         """逐 symbol 查 1d readiness，返回 {symbol: ready}。"""
         resp = self._client.get_historical_bars_readiness(
             self.exchange, symbols, [DAY_SECONDS], limit
