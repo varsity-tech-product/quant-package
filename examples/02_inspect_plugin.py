@@ -22,6 +22,7 @@ DEFAULTS = [
 
 
 def main() -> None:
+    # main
     root = Path(__file__).resolve().parents[1]
     paths = sys.argv[1:] or [str(root / p) for p in DEFAULTS]
     for path in paths:
