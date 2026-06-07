@@ -67,6 +67,7 @@ def test_build_signal_runs():
 
 
 def test_cross_section_zscore():
+    # test cross section zscore
     df = pd.DataFrame({"A": [1.0, 2], "B": [3.0, 4], "C": [5.0, 6]})
     z = cross_section_zscore(df)
     assert abs(z.iloc[0].mean()) < 1e-9
