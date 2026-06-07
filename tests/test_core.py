@@ -48,6 +48,7 @@ def _bars(symbols, n=120):
 
 
 def test_required_fields():
+    # test required fields
     for name, expected in EXPECTED_FIELDS.items():
         p = load_plugin(ROOT / "example_plugin" / f"{name}.py")
         assert p.required_fields == expected, (name, p.required_fields)
