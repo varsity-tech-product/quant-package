@@ -205,6 +205,7 @@ class BacktestClient:
 
 
 def _put_optional(body: dict, **kwargs: Any) -> None:
+    # put optional
     for k, v in kwargs.items():
         if v is not None:
             body[k] = v
