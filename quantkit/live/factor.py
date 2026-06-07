@@ -18,6 +18,7 @@ logger = logging.getLogger("factor")
 
 
 def build_weighted_factors(strategy: StrategyConfig) -> list[WeightedFactor]:
+    # 把 strategy.json 里的 factor specs 加载成 WeightedFactor 列表。
     """把 strategy.json 里的 factor specs 加载成 WeightedFactor 列表。"""
     factors: list[WeightedFactor] = []
     for spec in strategy.factors:
