@@ -449,6 +449,7 @@ class BinanceFuturesExecutor:
         target_weights: pd.Series,   # {symbol: weight}，正 = long，负 = short
         balance_usdt: float,
     ) -> None:
+        # 根据目标权重 rebalance 全部合约仓位。
         """
         根据目标权重 rebalance 全部合约仓位。
         1. 查询当前价格和仓位
