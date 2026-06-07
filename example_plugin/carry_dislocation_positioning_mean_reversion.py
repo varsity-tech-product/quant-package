@@ -214,6 +214,7 @@ FACTOR_SECTIONS = {
 
 
 def _ema_from_first_valid(x: pd.DataFrame, span: int) -> pd.DataFrame:
+    # ema from first valid
     alpha = 2.0 / (span + 1.0)
     out = pd.DataFrame(np.nan, index=x.index, columns=x.columns)
     prev = None
