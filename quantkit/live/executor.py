@@ -206,6 +206,7 @@ class BinanceFuturesExecutor:
     # ── 下单 ──────────────────────────────────────────────────────────────────
 
     async def set_leverage(self, symbol: str, leverage: int = LEVERAGE) -> None:
+        # set leverage
         params = {"symbol": symbol, "leverage": leverage, "timestamp": _ts()}
         params["signature"] = _sign(params)
 
