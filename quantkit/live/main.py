@@ -99,6 +99,7 @@ async def main_async(strategy_path: str, once: bool) -> None:
 
 
 def main(argv: list[str] | None = None) -> int:
+    # main
     ap = argparse.ArgumentParser(description="quantkit 币安实盘日度调仓")
     ap.add_argument("--strategy", required=True, help="strategy.json 路径")
     ap.add_argument("--once", action="store_true", help="立即跑一次后退出")
