@@ -209,6 +209,7 @@ def build_signal(
     taker_sell_volume: pd.DataFrame,
     **_kwargs,
 ) -> pd.DataFrame:
+    # build signal
     trend_window = int(params.get("trend_window", 28))
     quality_window = int(params.get("quality_window", 14))
     volume_window = int(params.get("volume_window", 42))
