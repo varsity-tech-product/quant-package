@@ -185,6 +185,7 @@ FACTOR_SECTIONS = {
 
 
 def _ema_state_like(x: pd.DataFrame, period: int) -> pd.DataFrame:
+    # ema state like
     alpha = 2.0 / (period + 1.0)
     out = pd.DataFrame(np.nan, index=x.index, columns=x.columns)
     if len(x) == 0:
