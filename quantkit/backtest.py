@@ -154,6 +154,7 @@ class BacktestClient:
 
     # ── 读结果 ───────────────────────────────────────────────────────────────
     def status(self, strategy_id: str) -> dict:
+        # status
         return self._request("GET", f"/strategies/{strategy_id}")
 
     def summary(self, strategy_id: str) -> dict:
