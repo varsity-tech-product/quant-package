@@ -186,6 +186,7 @@ class BacktestClient:
         timeout: float = 1800.0,
         on_progress=None,
     ) -> dict:
+        # 轮询 ``GET /strategies/{sid}`` 直到 completed/failed/timeout。
         """轮询 ``GET /strategies/{sid}`` 直到 completed/failed/timeout。
 
         Returns: 最终的 status dict。
