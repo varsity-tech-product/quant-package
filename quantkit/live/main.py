@@ -43,6 +43,7 @@ logger = logging.getLogger("main")
 
 
 def preflight(strategy: StrategyConfig) -> None:
+    # preflight
     errors = []
     if not config.BINANCE_API_KEY or not config.BINANCE_API_SECRET:
         errors.append("BINANCE_API_KEY / BINANCE_API_SECRET 未配置")
