@@ -104,6 +104,7 @@ def test_backtest_validation():
 
 
 def test_union_fields():
+    # test union fields
     ps = [load_plugin(ROOT / "example_plugin" / f"{n}.py") for n in EXPECTED_FIELDS]
     union = all_required_fields(ps)
     assert "close" in union and "open_interest_close" in union
