@@ -67,6 +67,7 @@ class GatewayClient:
         exchange: str = "binance",
         gateway_dir: str | Path = DEFAULT_GATEWAY_DIR,
     ) -> None:
+        # init
         self.target = target
         self.exchange = exchange
         self._ref = _load_ref_client(gateway_dir)
