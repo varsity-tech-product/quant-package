@@ -137,6 +137,7 @@ class BacktestClient:
         initial_cash: float | None = None,
         rebalance_bars: int | None = None,
     ) -> dict:
+        # 提交时序策略 ``POST /strategies/submit_ts``。
         """提交时序策略 ``POST /strategies/submit_ts``。"""
         self._validate(factors, weighting)
         if not 1 <= len(symbols) <= MAX_TS_SYMBOLS:
