@@ -184,6 +184,7 @@ class BinanceFuturesExecutor:
         raise ValueError(f"{symbol} 不在 exchangeInfo 中")
 
     async def _get_step_size(self, symbol: str) -> float:
+        # 从 exchangeInfo LOT_SIZE filter 获取最小下单精度，结果缓存
         """从 exchangeInfo LOT_SIZE filter 获取最小下单精度，结果缓存"""
         if symbol in self._step_size_cache:
             return self._step_size_cache[symbol]
