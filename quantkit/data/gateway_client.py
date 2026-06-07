@@ -135,6 +135,7 @@ class GatewayClient:
 
     # ── 历史 funding ─────────────────────────────────────────────────────────
     def fetch_funding(self, symbol: str, limit: int = 1000) -> pd.Series | None:
+        # 取单个 symbol 的历史 funding rate，返回 Series（index=UTC datetime）。
         """取单个 symbol 的历史 funding rate，返回 Series（index=UTC datetime）。"""
         resp = self._client.get_historical_funding_rates(self.exchange, symbol, limit)
         rates = resp.get("rates") or resp.get("fundingRates") or []
