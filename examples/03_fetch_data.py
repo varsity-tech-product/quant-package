@@ -16,6 +16,7 @@ from quantkit.plugins import load_plugin  # noqa: E402
 
 
 def main() -> None:
+    # main
     symbols = sys.argv[1:] or ["BTCUSDT", "ETHUSDT", "SOLUSDT", "BNBUSDT"]
     gw = GatewayClient()  # 默认 prod 13.231.65.185:8777
 
