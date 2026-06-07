@@ -25,6 +25,7 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 
 
 def _run(args: list[str]) -> subprocess.CompletedProcess:
+    # run
     return subprocess.run(
         args,
         cwd=REPO_ROOT,
