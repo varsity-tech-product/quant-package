@@ -43,6 +43,7 @@ class Factor:
     plugin: str
 
     def to_dict(self) -> dict[str, str]:
+        # to dict
         return {"job_id": self.job_id, "plugin": self.plugin}
 
 
