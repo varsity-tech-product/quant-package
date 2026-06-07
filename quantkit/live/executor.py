@@ -553,5 +553,6 @@ class BinanceFuturesExecutor:
                     logger.error("调仓异常: %s", r)
 
     def _round_qty(self, qty: float, step_size: float) -> float:
+        # 按 stepSize 向下取整，确保不超过 Binance 精度要求
         """按 stepSize 向下取整，确保不超过 Binance 精度要求"""
         return math.floor(qty / step_size) * step_size
