@@ -53,6 +53,7 @@ def _ts() -> int:
 class BinanceFuturesExecutor:
 
     def __init__(self) -> None:
+        # init
         self._headers = {
             "X-MBX-APIKEY": BINANCE_API_KEY,
             "Content-Type": "application/x-www-form-urlencoded",
