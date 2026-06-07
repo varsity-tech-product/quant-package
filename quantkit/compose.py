@@ -31,6 +31,7 @@ class WeightedFactor:
 
 
 def cross_section_zscore(signal: pd.DataFrame) -> pd.DataFrame:
+    # 对每一行（截面）跨 symbol 做 z-score。std 为 0 的行输出 0。
     """对每一行（截面）跨 symbol 做 z-score。std 为 0 的行输出 0。"""
     mu = signal.mean(axis=1)
     sd = signal.std(axis=1, ddof=0)
