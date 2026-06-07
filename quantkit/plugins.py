@@ -65,6 +65,7 @@ def required_fields(build_signal: Callable[..., Any]) -> list[str]:
 
 
 def load_plugin(path: str | Path) -> FactorPlugin:
+    # 从文件路径加载一个因子 plugin。
     """从文件路径加载一个因子 plugin。
 
     Args:
