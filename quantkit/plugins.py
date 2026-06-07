@@ -47,6 +47,7 @@ class FactorPlugin:
 
 
 def required_fields(build_signal: Callable[..., Any]) -> list[str]:
+    # 从 ``build_signal`` 签名推断需要的数据字段名。
     """从 ``build_signal`` 签名推断需要的数据字段名。
 
     跳过 ``close`` / ``params`` 这两个固定参数，以及 ``**kwargs`` 之类的可变参数。
