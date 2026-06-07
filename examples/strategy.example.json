@@ -1,0 +1,11 @@
+{
+  "_comment": "实盘策略定义样例。复制改成你自己的 strategy.json。factors 里的 plugin 用绝对路径指向你的因子文件（如 /mnt/efs-b/quant-factor-loop/.quant/<job>/step4/x.py），这里用 example_plugin 演示。",
+  "universe": {"mode": "cmc_top_n", "n": 10},
+  "factors": [
+    {"plugin": "example_plugin/flow_confirmed_smooth_trend_momentum.py", "weight": 0.6, "params": {}},
+    {"plugin": "example_plugin/trade_size_toxicity_flow_persistence.py", "weight": 0.4, "params": {}}
+  ],
+  "ranking": {"mode": "N", "value": 3},
+  "strategy_type": "neutral",
+  "gross": 1.0
+}
