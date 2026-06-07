@@ -94,6 +94,7 @@ class BinanceFuturesExecutor:
     # ── 查询接口 ──────────────────────────────────────────────────────────────
 
     async def get_balance(self) -> float:
+        # 返回 USDT 可用余额
         """返回 USDT 可用余额"""
         params = {"timestamp": _ts()}
         params["signature"] = _sign(params)
