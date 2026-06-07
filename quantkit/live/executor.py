@@ -142,6 +142,7 @@ class BinanceFuturesExecutor:
         return positions
 
     async def get_price(self, symbol: str) -> float:
+        # 获取最新标记价格（用于计算下单数量）
         """获取最新标记价格（用于计算下单数量）"""
         async with aiohttp.ClientSession() as s:
             async with s.get(
