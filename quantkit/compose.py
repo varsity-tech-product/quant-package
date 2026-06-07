@@ -133,6 +133,7 @@ def target_weights(
     gross: float = 1.0,
     max_single: float = 0.40,
 ) -> tuple[pd.Series, dict]:
+    # 一步从 plugins + 数据到最新截面目标权重（实盘入口）。
     """一步从 plugins + 数据到最新截面目标权重（实盘入口）。
 
     Returns: (weights Series, debug dict)。
