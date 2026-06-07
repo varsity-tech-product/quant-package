@@ -413,6 +413,7 @@ class BinanceFuturesExecutor:
             logger.info("限价单已全部成交 %s（撤单前成交完毕）", symbol)
 
     async def close_position(self, symbol: str, current_amt: float) -> dict:
+        # 平掉某个仓位（reduceOnly）
         """平掉某个仓位（reduceOnly）"""
         side = "SELL" if current_amt > 0 else "BUY"
         qty  = abs(current_amt)
