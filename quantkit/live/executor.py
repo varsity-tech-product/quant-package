@@ -116,6 +116,7 @@ class BinanceFuturesExecutor:
         raise ValueError("账户中未找到 USDT 余额")
 
     async def get_positions(self) -> dict[str, float]:
+        # 返回当前所有有持仓的合约：{BTCUSDT: position_amt}
         """
         返回当前所有有持仓的合约：{BTCUSDT: position_amt}
         正数 = long，负数 = short，0 = 无仓
