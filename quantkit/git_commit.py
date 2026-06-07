@@ -66,6 +66,7 @@ def commit(message: str, paths: list[str] | None = None, *, allow_empty: bool = 
 
 
 def commit_count() -> int:
+    # 返回当前分支的 commit 总数。
     """返回当前分支的 commit 总数。"""
     result = _run(["git", "rev-list", "--count", "HEAD"])
     return int(result.stdout.strip() or "0")
