@@ -74,6 +74,7 @@ def cross_section_weights(
     gross: float = 1.0,
     max_single: float = 0.40,
 ) -> pd.Series:
+    # 给定最新截面 composite 值，生成目标权重。
     """给定最新截面 composite 值，生成目标权重。
 
     Args:
