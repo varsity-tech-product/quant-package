@@ -87,6 +87,7 @@ class StrategyConfig:
 
     @classmethod
     def load(cls, path: str | Path) -> "StrategyConfig":
+        # load
         data = json.loads(Path(path).expanduser().read_text())
         factors = [FactorSpec(**f) for f in data["factors"]]
         return cls(
