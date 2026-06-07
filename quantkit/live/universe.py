@@ -63,6 +63,7 @@ async def _cmc_top_n(top_n: int) -> list[str]:
 
 
 async def _binance_active_symbols() -> set[str]:
+    # 从币安 Futures exchangeInfo 拿正在交易的 USDT 合约集合（行情用 mainnet）。
     """从币安 Futures exchangeInfo 拿正在交易的 USDT 合约集合（行情用 mainnet）。"""
     url = "https://fapi.binance.com/fapi/v1/exchangeInfo"
     async with aiohttp.ClientSession() as session:
