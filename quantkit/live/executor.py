@@ -199,6 +199,7 @@ class BinanceFuturesExecutor:
         return self._step_size_cache[symbol]
 
     def _get_tick_size(self, symbol: str) -> float:
+        # 返回价格精度（需先调用过 _get_step_size 缓存）
         """返回价格精度（需先调用过 _get_step_size 缓存）"""
         return self._tick_size_cache.get(symbol, 0.01)
 
