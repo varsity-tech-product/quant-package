@@ -53,6 +53,7 @@ class BacktestError(RuntimeError):
 
 class BacktestClient:
     def __init__(self, base: str = DEFAULT_BASE, *, timeout: float = 30.0) -> None:
+        # init
         self.base = base.rstrip("/")
         self.timeout = timeout
 
