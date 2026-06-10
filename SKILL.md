@@ -13,12 +13,28 @@ description: >-
 
 把用户挖到的**截面因子 plugin** 组合成策略 → 提交回测 → 取结果 → 部署币安实盘。
 
-代码在本仓 `quantkit/`，样例在 `examples/`，细节文档在 `reference/`。
+代码在本仓 `quantkit/`，样例在 `examples/`，细节文档在 `reference/`，
+**可直接回测的样例因子**（带 job_id）在 `sample_factors/`。
 
 ## 何时用
 - 「把因子 A、B 组合成策略回测一下」→ 能力 ①②
 - 「这个策略部署到实盘」→ 能力 ③
 - 「看看这个 plugin 需要哪些数据 / 怎么组合多因子」→ 能力 ①
+
+## 开工前：建独立工作目录（带时间戳）
+**每次任务先建一个带时间戳的独立目录**，所有产出（strategy.json、提交脚本、
+回测结果、实盘日志、笔记）都写进去，互不覆盖、可追溯：
+```bash
+WORKDIR="$HOME/quant_runs/run_$(date +%Y%m%d_%H%M%S)"
+mkdir -p "$WORKDIR"     # 之后所有文件写这里
+```
+不要把产出散在 package 目录里。
+
+## 用户没有自己的 job_id / plugin？用 sample_factors/
+真实回测需要 `{job_id, plugin}`。用户没有的话，直接用本仓 `sample_factors/` 里的
+归档因子（文件名 = `<job_id>__<plugin>.py`，清单见 `sample_factors/catalog.json`）。
+- 优先选 `catalog.json` 里 `live_ready=true` 的**纯量价**因子。
+- 用法见 `sample_factors/README.md`。
 
 ## 三条主路径
 
@@ -46,13 +62,23 @@ print(bt.summary(sid)["metrics"])
 实盘**在本地跑 `build_signal`**，数据走 exchange-gateway（只用 1d）。组合口径与
 回测 CS 语义一致，回测/实盘可比。
 
+**实盘前先向用户要 API key**：本包不内置任何密钥。部署前 **AI 主动问用户**要
+Binance API key/secret，并帮其写入 `.env`：
+- 默认 testnet（`BINANCE_TESTNET=true`）。testnet key 在
+  <https://testnet.binancefuture.com> 注册后生成，与主网**不通用**，资金是模拟的。
+- 要上主网才用主网 key（需开「合约交易」权限）。
+- 拿到后写进 `.env` 的 `BINANCE_API_KEY` / `BINANCE_API_SECRET`（`.env` 在 .gitignore，
+  不会提交）。没有 key 时 `--once` 会在预检直接报错。
+
 ```bash
 cp .env.example .env                              # 填币安 key(先testnet)、EXCHANGE_GATEWAY_DIR、CMC_API_KEY
-cp examples/strategy.example.json strategy.json   # 改成你的因子组合
+cp examples/strategy.example.json strategy.json   # 改成你的因子组合（可用 sample_factors/ 里的）
 python -m quantkit.live.main --strategy strategy.json --once   # 先验证一次
 python -m quantkit.live.main --strategy strategy.json          # 常驻每日调仓
 ```
 样例：`examples/04_deploy_live.py`。细节：`reference/live_deploy.md`。
+> 注意：`python -m quantkit.live.main` 须在 package 根目录下跑，`.env` 也放这里
+> （只从 cwd 读）；`strategy.json` 可用绝对路径指向你的工作目录。
 
 ## 因子字段是自省的（不写死）
 不同 plugin 需要的数据字段不同（carry 因子要 funding/OI/大户多空比）。用
@@ -78,3 +104,4 @@ load_plugin("example_plugin/carry_dislocation_positioning_mean_reversion.py").re
 - 回测 `factors` 1..5、`(job_id,plugin)` 不重复、custom 权重和=1.0、CS percent∈(0,50]
 - 实盘默认 `BINANCE_TESTNET=true`，确认无误再切主网
 - 数据服务需 `grpcurl` + `EXCHANGE_GATEWAY_DIR`，只用 1d
+- 卡住先查 `reference/troubleshooting.md`（服务探活 / grpcurl 安装 / 字段缺失 / cwd 依赖）
