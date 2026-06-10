@@ -32,12 +32,14 @@ python examples/04_deploy_live.py             # 实盘跑一次（需 .env + str
 - `reference/backtest_submit.md` — 回测提交速查
 - `reference/data_service.md` — exchange-gateway 数据服务（1d）
 - `reference/live_deploy.md` — 实盘部署
+- `reference/troubleshooting.md` — 已知卡点 / 排错
 
 ## 目录
 ```
 quantkit/         核心库（plugins / backtest / compose / data / live）
 examples/         端到端样例脚本 + strategy.example.json
 example_plugin/   3 个样例因子 plugin（演示插件格式）
+sample_factors/   12 个带 job_id 的归档因子（无自有因子时直接回测，catalog.json 索引）
 reference/        细节文档
 scripts/commit.sh 频繁提交小工具
 ```
