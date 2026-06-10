@@ -37,6 +37,9 @@ DEFAULT_GATEWAY_DIR = os.environ.get("EXCHANGE_GATEWAY_DIR", "/home/ec2-user/exc
 _BAR_FIELD_ALIASES = {
     "taker_buy_amount": "taker_buy_quote_volume",
     "taker_sell_amount": "taker_sell_quote_volume",
+    # 整根 bar 的成交额：ref client 叫 amount，plugin 入参名是 quote_volume。
+    "amount": "quote_volume",
+    "trade_count": "trades",
 }
 
 
