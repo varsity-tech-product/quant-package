@@ -1,0 +1,160 @@
+[
+  {
+    "file": "job_20260418_170137_1ea88e__tail_rejection_flow_misalignment.py",
+    "job_id": "job_20260418_170137_1ea88e",
+    "plugin": "tail_rejection_flow_misalignment.py",
+    "factor_type": "tail_rejection_flow_misalignment",
+    "required_fields": [
+      "high",
+      "low",
+      "taker_buy_quote_volume",
+      "taker_sell_quote_volume"
+    ],
+    "ohlcv_only": false,
+    "live_ready": true
+  },
+  {
+    "file": "job_20260418_180304_3ea5f1__flow_pressure_persistence_gap_confirmed.py",
+    "job_id": "job_20260418_180304_3ea5f1",
+    "plugin": "flow_pressure_persistence_gap_confirmed.py",
+    "factor_type": "flow_pressure_persistence_gap_confirmed",
+    "required_fields": [
+      "taker_buy_quote_volume",
+      "taker_sell_quote_volume"
+    ],
+    "ohlcv_only": false,
+    "live_ready": true
+  },
+  {
+    "file": "job_20260418_185701_5a9c12__trend_pullback_resumption.py",
+    "job_id": "job_20260418_185701_5a9c12",
+    "plugin": "trend_pullback_resumption.py",
+    "factor_type": "trend_pullback_resumption",
+    "required_fields": [],
+    "ohlcv_only": true,
+    "live_ready": true
+  },
+  {
+    "file": "job_20260418_185743_02d1a2__range_quote_inefficiency_reversal.py",
+    "job_id": "job_20260418_185743_02d1a2",
+    "plugin": "range_quote_inefficiency_reversal.py",
+    "factor_type": "range_quote_inefficiency_reversal",
+    "required_fields": [
+      "open",
+      "high",
+      "low",
+      "quote_volume"
+    ],
+    "ohlcv_only": false,
+    "live_ready": true
+  },
+  {
+    "file": "job_20260418_185839_e82065__execution_premium_asymmetry.py",
+    "job_id": "job_20260418_185839_e82065",
+    "plugin": "execution_premium_asymmetry.py",
+    "factor_type": "execution_premium_asymmetry",
+    "required_fields": [
+      "high",
+      "low",
+      "volume",
+      "quote_volume",
+      "taker_buy_volume",
+      "taker_sell_volume",
+      "taker_buy_quote_volume",
+      "taker_sell_quote_volume"
+    ],
+    "ohlcv_only": false,
+    "live_ready": true
+  },
+  {
+    "file": "job_20260419_060721_5fba34__auto_aggressive_slippage_alignment_v2_20260419i.py",
+    "job_id": "job_20260419_060721_5fba34",
+    "plugin": "auto_aggressive_slippage_alignment_v2_20260419i.py",
+    "factor_type": "auto_aggressive_slippage_alignment_v2_20260419i",
+    "required_fields": [
+      "high",
+      "low",
+      "quote_volume",
+      "taker_buy_volume",
+      "taker_sell_volume",
+      "taker_buy_quote_volume",
+      "taker_sell_quote_volume",
+      "taker_buy_trades",
+      "taker_sell_trades"
+    ],
+    "ohlcv_only": false,
+    "live_ready": true
+  },
+  {
+    "file": "job_20260504_194957_4ad361__taker_buy_ratio_accel_trades.py",
+    "job_id": "job_20260504_194957_4ad361",
+    "plugin": "taker_buy_ratio_accel_trades.py",
+    "factor_type": "taker_buy_ratio_accel_trades",
+    "required_fields": [
+      "taker_buy_volume",
+      "taker_sell_volume",
+      "taker_buy_trades",
+      "taker_sell_trades"
+    ],
+    "ohlcv_only": false,
+    "live_ready": true
+  },
+  {
+    "file": "job_20260517_061720_60fa66__liquidation_fast_shock_side_reversal.py",
+    "job_id": "job_20260517_061720_60fa66",
+    "plugin": "liquidation_fast_shock_side_reversal.py",
+    "factor_type": "liquidation_fast_shock_side_reversal",
+    "required_fields": [
+      "liquidation_long_usd",
+      "liquidation_short_usd",
+      "quote_volume"
+    ],
+    "ohlcv_only": false,
+    "live_ready": false
+  },
+  {
+    "file": "job_20260520_115027_5d652e__trend_vol_expansion_flow_40_14_90_20.py",
+    "job_id": "job_20260520_115027_5d652e",
+    "plugin": "trend_vol_expansion_flow_40_14_90_20.py",
+    "factor_type": "trend_vol_expansion_flow_40_14_90_20",
+    "required_fields": [
+      "taker_buy_volume",
+      "taker_sell_volume"
+    ],
+    "ohlcv_only": false,
+    "live_ready": true
+  },
+  {
+    "file": "job_20260521_224709_03374c__trend_vol_expansion_flow_auto_238_55_14_60_10.py",
+    "job_id": "job_20260521_224709_03374c",
+    "plugin": "trend_vol_expansion_flow_auto_238_55_14_60_10.py",
+    "factor_type": "trend_vol_expansion_flow_auto_238_55_14_60_10",
+    "required_fields": [
+      "taker_buy_volume",
+      "taker_sell_volume"
+    ],
+    "ohlcv_only": false,
+    "live_ready": true
+  },
+  {
+    "file": "job_20260522_015140_a2b54d__funding_vol_expansion_reversal_auto_279_7_5_30.py",
+    "job_id": "job_20260522_015140_a2b54d",
+    "plugin": "funding_vol_expansion_reversal_auto_279_7_5_30.py",
+    "factor_type": "funding_vol_expansion_reversal_auto_279_7_5_30",
+    "required_fields": [
+      "funding_rate_close",
+      "binance_premium_index_close"
+    ],
+    "ohlcv_only": false,
+    "live_ready": false
+  },
+  {
+    "file": "job_20260609_111044_5441f4__taker_trade_size_imbalance.py",
+    "job_id": "job_20260609_111044_5441f4",
+    "plugin": "taker_trade_size_imbalance.py",
+    "factor_type": "taker_trade_size_imbalance",
+    "required_fields": [],
+    "ohlcv_only": true,
+    "live_ready": true
+  }
+]
