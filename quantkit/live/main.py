@@ -72,7 +72,7 @@ async def main_async(strategy_path: str, once: bool) -> None:
     preflight(strategy)
 
     executor = BinanceFuturesExecutor()
-    gateway = GatewayClient(config.GATEWAY_TARGET, gateway_dir=config.EXCHANGE_GATEWAY_DIR)
+    gateway = GatewayClient(config.KLINE_TARGET, config.FUNDING_TARGET)
 
     if once:
         await _run_once(strategy, executor, gateway)
