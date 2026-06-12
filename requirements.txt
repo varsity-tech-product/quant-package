@@ -5,4 +5,4 @@ aiohttp>=3.9
 apscheduler>=3.10
 python-dotenv>=1.0
 # 回测客户端只用标准库 urllib，无需额外依赖
-# 数据服务：依赖系统已安装 grpcurl，并能访问 exchange-gateway 仓库（含 proto）
+# 数据服务：仅依赖系统已安装 grpcurl（参考客户端 + proto 已内置于 quantkit/data/_gateway）
