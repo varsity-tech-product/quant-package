@@ -128,7 +128,12 @@ def _maybe_fetch_features(
         return None
 
     logger.info("以下字段需 market_features 历史，补取中: %s", sorted(feature_fields))
-    features = gateway.fetch_features_panel(symbols, limit=config.KLINE_LOOKBACK)
+    try:
+        features = gateway.fetch_features_panel(symbols, limit=config.KLINE_LOOKBACK)
+    except Exception as e:
+        # 8778 feature 子服务可能未部署/未就绪（connection refused 等）；不让它崩掉整轮调仓。
+        logger.warning("market_features 取数失败（继续，按缺字段处理）: %s", e)
+        return None
     if not features:
         logger.warning(
             "market_features 取数为空（8778 feature backfill 可能未就绪）；"
