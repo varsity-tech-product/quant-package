@@ -3,8 +3,8 @@
 环境变量（.env，见 .env.example）：
   BINANCE_API_KEY / BINANCE_API_SECRET   币安 Futures key
   BINANCE_TESTNET=true                    默认 testnet 下单（强烈建议先 testnet）
-  EXCHANGE_GATEWAY_DIR                     exchange-gateway 仓库路径
-  GATEWAY_TARGET                           数据服务 gRPC 地址（默认 prod）
+  KLINE_TARGET                             aggtrade-kline-gateway gRPC（8778，klines+features）
+  FUNDING_TARGET                           market gateway gRPC（8777，funding）
   CMC_API_KEY / CMC_TOP_N                  universe = CMC TopN（可选）
 
 strategy.json（策略定义）：
@@ -33,9 +33,10 @@ except Exception:  # dotenv 可选
     pass
 
 # ── 数据服务 ───────────────────────────────────────────────────────────────────
-GATEWAY_TARGET = os.environ.get("GATEWAY_TARGET", "13.231.65.185:8777")
-EXCHANGE_GATEWAY_DIR = os.environ.get("EXCHANGE_GATEWAY_DIR", "/home/ec2-user/exchange-gateway")
-KLINE_LOOKBACK = int(os.environ.get("KLINE_LOOKBACK", "1000"))  # 1d bars 拉多少根
+# klines + features 走新 aggtrade-kline-gateway(8778)；funding 仍在旧 market gateway(8777)。
+KLINE_TARGET = os.environ.get("KLINE_TARGET", "13.231.65.185:8778")
+FUNDING_TARGET = os.environ.get("FUNDING_TARGET", "13.231.65.185:8777")
+KLINE_LOOKBACK = int(os.environ.get("KLINE_LOOKBACK", "300"))  # 1d bars 拉多少根（8778 上限 300）
 
 # ── 币安下单 ───────────────────────────────────────────────────────────────────
 BINANCE_API_KEY = os.environ.get("BINANCE_API_KEY", "")
