@@ -6,7 +6,8 @@ description: >-
   Binance Futures live trading. Use when the user wants to combine factors into
   a strategy, run a strategy backtest, inspect backtest results, or deploy a
   composed factor strategy to live trading. Data comes from the in-house
-  exchange-gateway service (1d), not Binance market feeds.
+  exchange-gateway service (1d; klines/features via 8778, funding via 8777),
+  not Binance market feeds. 取数依赖已内置，只需本机装 grpcurl。
 ---
 
 # quant-package
@@ -59,8 +60,9 @@ print(bt.summary(sid)["metrics"])
 > 样例 `example_plugin/` 只演示插件格式；真实回测提交用**已归档有 job_id** 的因子。
 
 ### ③ 部署币安实盘（日度调仓）
-实盘**在本地跑 `build_signal`**，数据走 exchange-gateway（只用 1d）。组合口径与
-回测 CS 语义一致，回测/实盘可比。
+实盘**在本地跑 `build_signal`**，数据走 exchange-gateway（只用 1d；bars/feature=8778、
+funding=8777，≤300 根）。取数依赖已内置，无需 exchange-gateway 仓库，只需本机装 grpcurl。
+组合口径与回测 CS 语义一致，回测/实盘可比。
 
 **实盘前先向用户要 API key**：本包不内置任何密钥。部署前 **AI 主动问用户**要
 Binance API key/secret，并帮其写入 `.env`：
@@ -71,7 +73,7 @@ Binance API key/secret，并帮其写入 `.env`：
   不会提交）。没有 key 时 `--once` 会在预检直接报错。
 
 ```bash
-cp .env.example .env                              # 填币安 key(先testnet)、EXCHANGE_GATEWAY_DIR、CMC_API_KEY
+cp .env.example .env                              # 填币安 key(先testnet)、CMC_API_KEY；数据地址用默认即可
 cp examples/strategy.example.json strategy.json   # 改成你的因子组合（可用 sample_factors/ 里的）
 python -m quantkit.live.main --strategy strategy.json --once   # 先验证一次
 python -m quantkit.live.main --strategy strategy.json          # 常驻每日调仓
@@ -95,7 +97,7 @@ load_plugin("example_plugin/carry_dislocation_positioning_mean_reversion.py").re
 |---|---|
 | `quantkit.plugins` | 加载 plugin + 自省所需字段 |
 | `quantkit.backtest` | 回测服务客户端（submit_cs/ts + 轮询 + 取结果） |
-| `quantkit.data.gateway_client` | exchange-gateway 取 1d bars/funding/readiness |
+| `quantkit.data.gateway_client` | 取 1d bars/readiness/feature(8778) + funding(8777)；取数依赖内置于 `_gateway/` |
 | `quantkit.data.panels` | 切面板 + 本地跑 build_signal |
 | `quantkit.compose` | 多因子截面 z-score 加权 composite → 截面权重 |
 | `quantkit.live.*` | 币安实盘日度调仓引擎 |
@@ -103,5 +105,5 @@ load_plugin("example_plugin/carry_dislocation_positioning_mean_reversion.py").re
 ## 关键约束
 - 回测 `factors` 1..5、`(job_id,plugin)` 不重复、custom 权重和=1.0、CS percent∈(0,50]
 - 实盘默认 `BINANCE_TESTNET=true`，确认无误再切主网
-- 数据服务需 `grpcurl` + `EXCHANGE_GATEWAY_DIR`，只用 1d
+- 数据服务只需本机 `grpcurl`（取数依赖已内置）；只用 1d，bars 上限 300 根
 - 卡住先查 `reference/troubleshooting.md`（服务探活 / grpcurl 安装 / 字段缺失 / cwd 依赖）
