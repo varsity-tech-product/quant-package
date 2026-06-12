@@ -2,7 +2,8 @@
 """样例 4：部署实盘（默认 testnet，先跑一次验证）。
 
 前置：
-  1. cp .env.example .env 并填好 BINANCE_API_KEY/SECRET（先 testnet）、EXCHANGE_GATEWAY_DIR
+  1. cp .env.example .env 并填好 BINANCE_API_KEY/SECRET（先 testnet）；数据服务地址用默认即可
+     （KLINE_TARGET=8778 / FUNDING_TARGET=8777）。取数依赖已内置，只需本机装 grpcurl。
   2. cp examples/strategy.example.json strategy.json 并改成你的因子组合
 
 跑一次（不起调度器）：

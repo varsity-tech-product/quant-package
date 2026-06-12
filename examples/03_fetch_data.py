@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """样例 3：从 exchange-gateway 数据服务取 1d 行情，拼成因子需要的面板。
 
-依赖：本机装了 grpcurl，且 EXCHANGE_GATEWAY_DIR 指向 exchange-gateway 仓库。
+依赖：本机装了 grpcurl（取数依赖已内置，无需 exchange-gateway 仓库）。
+bars/readiness 走 8778 aggtrade-kline-gateway（≤300 根），funding 走 8777。
 
     python examples/03_fetch_data.py BTCUSDT ETHUSDT SOLUSDT BNBUSDT
 """
@@ -18,10 +19,10 @@ from quantkit.plugins import load_plugin  # noqa: E402
 def main() -> None:
     # main
     symbols = sys.argv[1:] or ["BTCUSDT", "ETHUSDT", "SOLUSDT", "BNBUSDT"]
-    gw = GatewayClient()  # 默认 prod 13.231.65.185:8777
+    gw = GatewayClient()  # 默认 klines/features=8778, funding=8777
 
     print("readiness:", gw.is_ready(symbols))
-    bars = gw.fetch_bars_panel(symbols, limit=1000)
+    bars = gw.fetch_bars_panel(symbols, limit=300)
     for sym, df in bars.items():
         print(f"{sym}: {df.shape[0]} bars, cols={list(df.columns)[:6]}..., last={df.index[-1].date()}")
 
