@@ -1,0 +1,12 @@
+syntax = "proto3";
+
+package exchange_gateway.common.v1;
+
+option csharp_namespace = "ExchangeGateway.Common.V1";
+option go_package = "github.com/varsity-tech/exchange-gateway/go/shared/gen/common/v1;commonv1";
+
+message Decimal128 {
+  int64 hi = 1;
+  uint64 lo = 2;
+  uint32 scale = 3;
+}

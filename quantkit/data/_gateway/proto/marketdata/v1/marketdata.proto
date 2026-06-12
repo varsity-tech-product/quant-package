@@ -1,0 +1,536 @@
+syntax = "proto3";
+
+package exchange_gateway.marketdata.v1;
+
+import "proto/common/v1/decimal.proto";
+
+option csharp_namespace = "ExchangeGateway.MarketData.V1";
+option go_package = "github.com/varsity-tech/exchange-gateway/go/shared/gen/marketdata/v1;marketdatav1";
+
+enum DataQuality {
+  DATA_QUALITY_UNSPECIFIED = 0;
+  DATA_QUALITY_COMPLETE = 1;
+}
+
+enum GapStatus {
+  GAP_STATUS_UNSPECIFIED = 0;
+  GAP_STATUS_READY = 1;
+  GAP_STATUS_GAP_DETECTED = 2;
+  GAP_STATUS_BACKFILL_FAILED = 3;
+  GAP_STATUS_PAUSED = 4;
+  GAP_STATUS_RECOVERING = 5;
+}
+
+message BarSubscription {
+  string exchange = 1;
+  string symbol = 2;
+  uint32 interval_seconds = 3;
+}
+
+message Bar {
+  string exchange = 1;
+  string symbol = 2;
+  int64 open_time_ms = 3;
+  uint32 interval_seconds = 4;
+  exchange_gateway.common.v1.Decimal128 open = 5;
+  exchange_gateway.common.v1.Decimal128 high = 6;
+  exchange_gateway.common.v1.Decimal128 low = 7;
+  exchange_gateway.common.v1.Decimal128 close = 8;
+  exchange_gateway.common.v1.Decimal128 volume = 9;
+  exchange_gateway.common.v1.Decimal128 taker_buy_volume = 10;
+  exchange_gateway.common.v1.Decimal128 taker_sell_volume = 11;
+  exchange_gateway.common.v1.Decimal128 taker_buy_quote_volume = 12;
+  exchange_gateway.common.v1.Decimal128 taker_sell_quote_volume = 13;
+  uint64 taker_buy_trades = 14;
+  uint64 taker_sell_trades = 15;
+  DataQuality data_quality = 16;
+  uint64 trade_count = 17;
+}
+
+message SymbolStatus {
+  string exchange = 1;
+  string symbol = 2;
+  GapStatus gap_status = 3;
+  string reason = 4;
+  int64 event_time_ms = 5;
+}
+
+message MarketDataEventMetadata {
+  string worker_id = 1;
+  uint64 assignment_generation = 2;
+  string config_version = 3;
+  int64 published_at_unix_ms = 4;
+}
+
+message PublishedBar {
+  MarketDataEventMetadata metadata = 1;
+  Bar bar = 2;
+}
+
+message BarEnvelope {
+  MarketDataEventMetadata metadata = 1;
+  Bar bar = 2;
+  string subject = 3;
+  uint64 stream_sequence = 4;
+}
+
+message PublishedSymbolStatus {
+  MarketDataEventMetadata metadata = 1;
+  SymbolStatus status = 2;
+}
+
+enum FeatureCompleteness {
+  FEATURE_COMPLETENESS_UNSPECIFIED = 0;
+  FEATURE_COMPLETENESS_COMPLETE = 1;
+  FEATURE_COMPLETENESS_COMPLETE_WITH_MISSING_VALUES = 2;
+}
+
+enum FeatureReadinessPolicy {
+  FEATURE_READINESS_POLICY_UNSPECIFIED = 0;
+  FEATURE_READINESS_POLICY_CURRENT = 1;
+  FEATURE_READINESS_POLICY_FAST_WITHOUT_REST = 2;
+  FEATURE_READINESS_POLICY_STRICT_ALL = 3;
+}
+
+enum SliceCompleteness {
+  SLICE_COMPLETENESS_UNSPECIFIED = 0;
+  SLICE_COMPLETENESS_COMPLETE = 1;
+}
+
+message FeatureSubscription {
+  string exchange = 1;
+  string symbol = 2;
+  string dataset = 3;
+  string interval = 4;
+}
+
+message FeatureBar {
+  string exchange = 1;
+  string symbol = 2;
+  string dataset = 3;
+  string interval = 4;
+  int64 open_time_ms = 5;
+  int64 end_time_ms = 6;
+  repeated string columns = 7;
+  repeated string values = 8;
+  repeated bool missing_mask = 9;
+  FeatureCompleteness completeness = 10;
+  string source_version = 11;
+  int64 published_at_ms = 12;
+}
+
+message PublishedFeatureBar {
+  MarketDataEventMetadata metadata = 1;
+  FeatureBar feature_bar = 2;
+}
+
+enum AssignmentPhase {
+  ASSIGNMENT_PHASE_UNSPECIFIED = 0;
+  ASSIGNMENT_PHASE_PREPARE = 1;
+  ASSIGNMENT_PHASE_COMMIT = 2;
+}
+
+message MarketSymbol {
+  string exchange = 1;
+  string symbol = 2;
+  string pair = 3;
+  string contract_type = 4;
+  string status = 5;
+  string quote_asset = 6;
+  string margin_asset = 7;
+  int64 onboard_time_ms = 8;
+}
+
+message SymbolCheckpoint {
+  string exchange = 1;
+  string symbol = 2;
+  uint64 last_agg_trade_id = 3;
+  int64 last_trade_time_ms = 4;
+  int64 last_finalized_base_bar_open_time_ms = 5;
+  uint64 assignment_generation = 6;
+}
+
+message WorkerSymbolAssignment {
+  string exchange = 1;
+  string symbol = 2;
+  repeated uint32 interval_seconds = 3;
+  SymbolCheckpoint checkpoint = 4;
+}
+
+message WorkerAssignment {
+  string worker_id = 1;
+  repeated WorkerSymbolAssignment symbols = 2;
+}
+
+message AssignmentSnapshot {
+  AssignmentPhase phase = 1;
+  uint64 assignment_generation = 2;
+  string config_version = 3;
+  int64 created_at_unix_ms = 4;
+  int64 effective_after_unix_ms = 5;
+  repeated WorkerAssignment workers = 6;
+  string snapshot_hash = 7;
+}
+
+message WorkerAssignmentReady {
+  string worker_id = 1;
+  uint64 assignment_generation = 2;
+  string config_version = 3;
+  repeated SymbolCheckpoint ready_symbols = 4;
+  repeated SymbolStatus failed_symbols = 5;
+}
+
+message SubscribeBarsRequest {
+  repeated BarSubscription subscriptions = 1;
+  bool include_bar_envelope = 2;
+}
+
+message SubscribeBarsResponse {
+  oneof payload {
+    Bar bar = 1;
+    SymbolStatus status = 2;
+    BarEnvelope bar_envelope = 3;
+  }
+}
+
+message LatestMarketDataRow {
+  BarEnvelope bar_envelope = 1;
+  FundingRateCurrentSnapshot current_funding = 2;
+}
+
+message GetLatestMarketDataRequest {
+  string exchange = 1;
+  repeated string symbols = 2;
+  uint32 interval_seconds = 3;
+}
+
+message GetLatestMarketDataResponse {
+  repeated LatestMarketDataRow rows = 1;
+  repeated SymbolStatus statuses = 2;
+}
+
+message GetHistoricalBarsRequest {
+  string exchange = 1;
+  string symbol = 2;
+  uint32 interval_seconds = 3;
+  uint32 limit = 4;
+  int64 end_time_ms = 5;
+  bool include_bar_envelope = 6;
+}
+
+enum HistoricalBarsReadinessStatus {
+  HISTORICAL_BARS_READINESS_STATUS_UNSPECIFIED = 0;
+  HISTORICAL_BARS_READINESS_READY = 1;
+  HISTORICAL_BARS_READINESS_PARTIAL = 2;
+  HISTORICAL_BARS_READINESS_RECOVERING = 3;
+  HISTORICAL_BARS_READINESS_SKIPPED_TOO_OLD = 4;
+  HISTORICAL_BARS_READINESS_RATE_LIMITED = 5;
+  HISTORICAL_BARS_READINESS_BACKFILL_FAILED = 6;
+  HISTORICAL_BARS_READINESS_NOT_SUPPORTED = 7;
+}
+
+message HistoricalBarsGap {
+  int64 start_time_ms = 1;
+  int64 end_time_ms_exclusive = 2;
+  uint32 missing_bars = 3;
+  bool backfill_eligible = 4;
+  string skip_reason = 5;
+}
+
+message HistoricalBarsReadiness {
+  string exchange = 1;
+  string symbol = 2;
+  uint32 interval_seconds = 3;
+  bool ready = 4;
+  HistoricalBarsReadinessStatus status = 5;
+  string reason = 6;
+  uint32 requested_limit = 7;
+  int64 window_start_ms = 8;
+  int64 window_end_ms = 9;
+  int64 available_from_ms = 10;
+  int64 available_to_ms = 11;
+  int64 ready_from_ms = 12;
+  int64 ready_to_ms = 13;
+  uint32 missing_gap_count = 14;
+  repeated HistoricalBarsGap gaps = 15;
+  int64 last_backfill_started_at_ms = 16;
+  int64 last_backfill_completed_at_ms = 17;
+  string last_error = 18;
+  int64 updated_at_ms = 19;
+  bool insufficient_listing_age = 20;
+}
+
+message GetHistoricalBarsReadinessRequest {
+  string exchange = 1;
+  repeated string symbols = 2;
+  repeated uint32 interval_seconds = 3;
+  uint32 limit = 4;
+  int64 end_time_ms = 5;
+  bool include_gaps = 6;
+  uint32 max_gaps = 7;
+}
+
+message GetHistoricalBarsReadinessResponse {
+  repeated HistoricalBarsReadiness rows = 1;
+  repeated SymbolStatus statuses = 2;
+}
+
+message HistoricalBarsWindow {
+  uint32 requested_limit = 1;
+  uint32 returned_count = 2;
+  int64 oldest_open_time_ms = 3;
+  int64 newest_open_time_ms = 4;
+  bool cache_fully_warmed = 5;
+  string source = 6;
+}
+
+message GetHistoricalBarsResponse {
+  repeated Bar bars = 1;
+  repeated BarEnvelope bar_envelopes = 2;
+  HistoricalBarsWindow window = 3;
+  repeated SymbolStatus statuses = 4;
+}
+
+message GetExchangeInfoRequest {
+  string exchange = 1;
+  repeated string symbols = 2;
+  bool include_ineligible = 3;
+}
+
+message GetExchangeInfoResponse {
+  repeated MarketSymbol symbols = 1;
+  int64 cached_at_ms = 2;
+  int64 next_refresh_after_ms = 3;
+  string source = 4;
+  repeated SymbolStatus statuses = 5;
+}
+
+message SubscribeSymbolStatusRequest {
+  repeated BarSubscription subscriptions = 1;
+}
+
+message SubscribeFeatureBarsRequest {
+  repeated FeatureSubscription subscriptions = 1;
+}
+
+message SubscribeFeatureBarsResponse {
+  oneof payload {
+    FeatureBar feature_bar = 1;
+    SymbolStatus status = 2;
+  }
+}
+
+message MarketDataSliceSubscription {
+  string exchange = 1;
+  repeated string symbols = 2;
+  uint32 bar_interval_seconds = 3;
+  repeated string feature_datasets = 4;
+  string feature_interval = 5;
+  uint32 release_timeout_ms = 6;
+  bool require_current_daily_feature = 7;
+  FeatureReadinessPolicy feature_readiness_policy = 8;
+}
+
+message SliceMissingInput {
+  string exchange = 1;
+  string symbol = 2;
+  string input_type = 3;
+  string dataset = 4;
+  string interval = 5;
+  int64 expected_time_ms = 6;
+  string reason = 7;
+  FeatureReadinessPolicy feature_readiness_policy = 8;
+}
+
+message MarketDataSlice {
+  string exchange = 1;
+  uint32 bar_interval_seconds = 2;
+  int64 slice_time_ms = 3;
+  repeated Bar bars = 4;
+  repeated FeatureBar feature_bars = 5;
+  SliceCompleteness completeness = 6;
+  int64 released_at_ms = 7;
+}
+
+message SubscribeMarketDataSlicesRequest {
+  repeated MarketDataSliceSubscription subscriptions = 1;
+}
+
+message SubscribeMarketDataSlicesResponse {
+  oneof payload {
+    MarketDataSlice slice = 1;
+    SymbolStatus status = 2;
+    SliceMissingInput missing_input = 3;
+  }
+}
+
+enum FundingRateSource {
+  FUNDING_RATE_SOURCE_UNSPECIFIED = 0;
+  FUNDING_RATE_SOURCE_WEBSOCKET_MARK_PRICE = 1;
+  FUNDING_RATE_SOURCE_REST_PREMIUM_INDEX = 2;
+  FUNDING_RATE_SOURCE_REST_FUNDING_RATE = 3;
+}
+
+enum FundingRateQuality {
+  FUNDING_RATE_QUALITY_UNSPECIFIED = 0;
+  FUNDING_RATE_QUALITY_BOOTSTRAP = 1;
+  FUNDING_RATE_QUALITY_FRESH = 2;
+  FUNDING_RATE_QUALITY_STALE = 3;
+  FUNDING_RATE_QUALITY_GAP_RECOVERED = 4;
+  FUNDING_RATE_QUALITY_PROVISIONAL_WS = 5;
+  FUNDING_RATE_QUALITY_CONFIRMED_REST = 6;
+  FUNDING_RATE_QUALITY_CORRECTED_REST = 7;
+  FUNDING_RATE_QUALITY_MISSING_REST = 8;
+}
+
+enum FundingRateFillPolicy {
+  FUNDING_RATE_FILL_POLICY_UNSPECIFIED = 0;
+  FUNDING_RATE_FILL_POLICY_EXACT_ZERO_FILL = 1;
+  FUNDING_RATE_FILL_POLICY_ASOF_FORWARD_FILL = 2;
+}
+
+message FundingRateCurrentSnapshot {
+  string exchange = 1;
+  string symbol = 2;
+  string contract_type = 3;
+  exchange_gateway.common.v1.Decimal128 funding_rate = 4;
+  exchange_gateway.common.v1.Decimal128 mark_price = 5;
+  exchange_gateway.common.v1.Decimal128 index_price = 6;
+  exchange_gateway.common.v1.Decimal128 estimated_settle_price = 7;
+  int64 next_funding_time_ms = 8;
+  int64 event_time_ms = 9;
+  FundingRateSource source = 10;
+  FundingRateQuality quality = 11;
+  string producer_id = 12;
+  uint64 producer_epoch = 13;
+  int64 published_at_ms = 14;
+  uint64 sequence_in_epoch = 15;
+}
+
+message FundingRateSettlementEvent {
+  string exchange = 1;
+  string symbol = 2;
+  string contract_type = 3;
+  int64 funding_time_ms = 4;
+  exchange_gateway.common.v1.Decimal128 funding_rate = 5;
+  exchange_gateway.common.v1.Decimal128 mark_price = 6;
+  FundingRateSource source = 7;
+  FundingRateQuality quality = 8;
+  string producer_id = 9;
+  uint64 producer_epoch = 10;
+  int64 observed_event_time_ms = 11;
+  int64 confirmed_at_ms = 12;
+  int64 published_at_ms = 13;
+  uint64 sequence_in_epoch = 14;
+}
+
+message PublishedFundingRateCurrentSnapshot {
+  MarketDataEventMetadata metadata = 1;
+  FundingRateCurrentSnapshot snapshot = 2;
+}
+
+message PublishedFundingRateSettlementEvent {
+  MarketDataEventMetadata metadata = 1;
+  FundingRateSettlementEvent event = 2;
+}
+
+message GetCurrentFundingRatesRequest {
+  string exchange = 1;
+  repeated string symbols = 2;
+}
+
+message GetCurrentFundingRatesResponse {
+  repeated FundingRateCurrentSnapshot snapshots = 1;
+  repeated SymbolStatus statuses = 2;
+}
+
+message SubscribeCurrentFundingRatesRequest {
+  string exchange = 1;
+  repeated string symbols = 2;
+  bool include_initial_snapshot = 3;
+}
+
+message GetSettlementFundingRatesAtRequest {
+  string exchange = 1;
+  repeated string symbols = 2;
+  repeated int64 timestamps_ms = 3;
+  FundingRateFillPolicy fill_policy = 4;
+}
+
+message SettlementFundingRateAt {
+  string exchange = 1;
+  string symbol = 2;
+  string contract_type = 3;
+  int64 timestamp_ms = 4;
+  exchange_gateway.common.v1.Decimal128 funding_rate = 5;
+  bool matched_settlement_event = 6;
+  FundingRateSettlementEvent settlement_event = 7;
+}
+
+message GetSettlementFundingRatesAtResponse {
+  repeated SettlementFundingRateAt rates = 1;
+  repeated SymbolStatus statuses = 2;
+}
+
+message SubscribeSettlementFundingRatesRequest {
+  string exchange = 1;
+  repeated string symbols = 2;
+  bool include_recent_events = 3;
+}
+
+message SubscribeCurrentFundingRatesResponse {
+  oneof payload {
+    FundingRateCurrentSnapshot snapshot = 1;
+    SymbolStatus status = 2;
+  }
+}
+
+message SubscribeSettlementFundingRatesResponse {
+  oneof payload {
+    FundingRateSettlementEvent event = 1;
+    SymbolStatus status = 2;
+  }
+}
+
+message GetHistoricalFundingRatesRequest {
+  string exchange = 1;
+  string symbol = 2;
+  string contract_type = 3;
+  uint32 limit = 4;
+  int64 start_time_ms = 5;
+  int64 end_time_ms = 6;
+  bool include_provisional = 7;
+}
+
+message HistoricalFundingRatesWindow {
+  uint32 requested_limit = 1;
+  uint32 returned_count = 2;
+  int64 oldest_funding_time_ms = 3;
+  int64 newest_funding_time_ms = 4;
+  bool cache_fully_warmed = 5;
+  string source = 6;
+}
+
+message GetHistoricalFundingRatesResponse {
+  repeated FundingRateSettlementEvent events = 1;
+  HistoricalFundingRatesWindow window = 2;
+  repeated SymbolStatus statuses = 3;
+}
+
+service MarketDataService {
+  rpc SubscribeBars(SubscribeBarsRequest) returns (stream SubscribeBarsResponse);
+  rpc GetLatestMarketData(GetLatestMarketDataRequest) returns (GetLatestMarketDataResponse);
+  rpc GetHistoricalBars(GetHistoricalBarsRequest) returns (GetHistoricalBarsResponse);
+  rpc GetHistoricalBarsReadiness(GetHistoricalBarsReadinessRequest) returns (GetHistoricalBarsReadinessResponse);
+  rpc GetHistoricalAggTradeBars(GetHistoricalBarsRequest) returns (GetHistoricalBarsResponse);
+  rpc GetHistoricalAggTradeBarsReadiness(GetHistoricalBarsReadinessRequest) returns (GetHistoricalBarsReadinessResponse);
+  rpc GetExchangeInfo(GetExchangeInfoRequest) returns (GetExchangeInfoResponse);
+  rpc SubscribeSymbolStatus(SubscribeSymbolStatusRequest) returns (stream SymbolStatus);
+  rpc SubscribeFeatureBars(SubscribeFeatureBarsRequest) returns (stream SubscribeFeatureBarsResponse);
+  rpc GetCurrentFundingRates(GetCurrentFundingRatesRequest) returns (GetCurrentFundingRatesResponse);
+  rpc SubscribeCurrentFundingRates(SubscribeCurrentFundingRatesRequest) returns (stream SubscribeCurrentFundingRatesResponse);
+  rpc GetSettlementFundingRatesAt(GetSettlementFundingRatesAtRequest) returns (GetSettlementFundingRatesAtResponse);
+  rpc SubscribeSettlementFundingRates(SubscribeSettlementFundingRatesRequest) returns (stream SubscribeSettlementFundingRatesResponse);
+  rpc GetHistoricalFundingRates(GetHistoricalFundingRatesRequest) returns (GetHistoricalFundingRatesResponse);
+  rpc SubscribeMarketDataSlices(SubscribeMarketDataSlicesRequest) returns (stream SubscribeMarketDataSlicesResponse);
+}

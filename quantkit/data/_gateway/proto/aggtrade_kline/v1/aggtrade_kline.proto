@@ -1,0 +1,208 @@
+syntax = "proto3";
+
+package exchange_gateway.aggtrade_kline.v1;
+
+import "proto/marketdata/v1/marketdata.proto";
+
+option csharp_namespace = "ExchangeGateway.AggTradeKline.V1";
+option go_package = "github.com/varsity-tech/exchange-gateway/go/shared/gen/aggtrade_kline/v1;aggtradeklinev1";
+
+message KlineSubscription {
+  string exchange = 1;
+  string symbol = 2;
+  uint32 interval_seconds = 3;
+}
+
+message FeatureHistorySubscription {
+  string exchange = 1;
+  string symbol = 2;
+  string dataset = 3;
+  string interval = 4;
+}
+
+message SubscribeKlinesRequest {
+  repeated KlineSubscription subscriptions = 1;
+  bool include_bar_envelope = 2;
+}
+
+message SubscribeKlinesResponse {
+  oneof payload {
+    exchange_gateway.marketdata.v1.Bar bar = 1;
+    exchange_gateway.marketdata.v1.SymbolStatus status = 2;
+    exchange_gateway.marketdata.v1.BarEnvelope bar_envelope = 3;
+  }
+}
+
+message GetLatestKlinesRequest {
+  string exchange = 1;
+  repeated string symbols = 2;
+  uint32 interval_seconds = 3;
+}
+
+message GetLatestKlinesResponse {
+  repeated exchange_gateway.marketdata.v1.BarEnvelope rows = 1;
+  repeated exchange_gateway.marketdata.v1.SymbolStatus statuses = 2;
+}
+
+message GetHistoricalKlinesRequest {
+  string exchange = 1;
+  string symbol = 2;
+  uint32 interval_seconds = 3;
+  uint32 limit = 4;
+  int64 end_time_ms = 5;
+  bool include_bar_envelope = 6;
+}
+
+message HistoricalWindow {
+  uint32 requested_limit = 1;
+  uint32 returned_count = 2;
+  int64 oldest_open_time_ms = 3;
+  int64 newest_open_time_ms = 4;
+  bool cache_fully_warmed = 5;
+  string source = 6;
+}
+
+message GetHistoricalKlinesResponse {
+  repeated exchange_gateway.marketdata.v1.Bar bars = 1;
+  repeated exchange_gateway.marketdata.v1.BarEnvelope bar_envelopes = 2;
+  HistoricalWindow window = 3;
+  repeated exchange_gateway.marketdata.v1.SymbolStatus statuses = 4;
+}
+
+message GetHistoricalKlineReadinessRequest {
+  string exchange = 1;
+  repeated string symbols = 2;
+  repeated uint32 interval_seconds = 3;
+  uint32 limit = 4;
+  int64 end_time_ms = 5;
+  bool include_gaps = 6;
+  uint32 max_gaps = 7;
+}
+
+message GetHistoricalKlineReadinessResponse {
+  repeated exchange_gateway.marketdata.v1.HistoricalBarsReadiness rows = 1;
+  repeated exchange_gateway.marketdata.v1.SymbolStatus statuses = 2;
+}
+
+message SubscribeFeatureBarsRequest {
+  repeated exchange_gateway.marketdata.v1.FeatureSubscription subscriptions = 1;
+}
+
+message SubscribeFeatureBarsResponse {
+  oneof payload {
+    exchange_gateway.marketdata.v1.FeatureBar feature_bar = 1;
+    exchange_gateway.marketdata.v1.SymbolStatus status = 2;
+  }
+}
+
+message GetLatestFeatureBarsRequest {
+  repeated FeatureHistorySubscription subscriptions = 1;
+}
+
+message GetLatestFeatureBarsResponse {
+  repeated exchange_gateway.marketdata.v1.FeatureBar feature_bars = 1;
+  repeated exchange_gateway.marketdata.v1.SymbolStatus statuses = 2;
+}
+
+message GetHistoricalFeatureBarsRequest {
+  string exchange = 1;
+  string symbol = 2;
+  string dataset = 3;
+  string interval = 4;
+  uint32 limit = 5;
+  int64 end_time_ms = 6;
+}
+
+message GetHistoricalFeatureBarsResponse {
+  repeated exchange_gateway.marketdata.v1.FeatureBar feature_bars = 1;
+  HistoricalWindow window = 2;
+  repeated exchange_gateway.marketdata.v1.SymbolStatus statuses = 3;
+}
+
+message HistoricalFeatureReadiness {
+  string exchange = 1;
+  string symbol = 2;
+  string dataset = 3;
+  string interval = 4;
+  bool ready = 5;
+  string reason = 6;
+  uint32 requested_limit = 7;
+  int64 window_start_ms = 8;
+  int64 window_end_ms = 9;
+  uint32 missing_count = 10;
+  int64 updated_at_ms = 11;
+}
+
+message GetHistoricalFeatureReadinessRequest {
+  repeated FeatureHistorySubscription subscriptions = 1;
+  uint32 limit = 2;
+  int64 end_time_ms = 3;
+}
+
+message GetHistoricalFeatureReadinessResponse {
+  repeated HistoricalFeatureReadiness rows = 1;
+  repeated exchange_gateway.marketdata.v1.SymbolStatus statuses = 2;
+}
+
+message SubscribeKlineSlicesRequest {
+  repeated exchange_gateway.marketdata.v1.MarketDataSliceSubscription subscriptions = 1;
+}
+
+message SubscribeKlineSlicesResponse {
+  oneof payload {
+    exchange_gateway.marketdata.v1.MarketDataSlice slice = 1;
+    exchange_gateway.marketdata.v1.SymbolStatus status = 2;
+    exchange_gateway.marketdata.v1.SliceMissingInput missing_input = 3;
+  }
+}
+
+message GetHistoricalKlineSlicesRequest {
+  string exchange = 1;
+  repeated string symbols = 2;
+  uint32 interval_seconds = 3;
+  string feature_dataset = 4;
+  string feature_interval = 5;
+  uint32 limit = 6;
+  int64 end_time_ms = 7;
+  exchange_gateway.marketdata.v1.FeatureReadinessPolicy feature_readiness_policy = 8;
+}
+
+message GetHistoricalKlineSlicesResponse {
+  repeated exchange_gateway.marketdata.v1.MarketDataSlice slices = 1;
+  HistoricalWindow window = 2;
+  repeated exchange_gateway.marketdata.v1.SymbolStatus statuses = 3;
+  repeated exchange_gateway.marketdata.v1.SliceMissingInput missing_inputs = 4;
+}
+
+message SubscribeSymbolStatusRequest {
+  repeated KlineSubscription subscriptions = 1;
+}
+
+message GetExchangeInfoRequest {
+  string exchange = 1;
+  repeated string symbols = 2;
+  bool include_ineligible = 3;
+}
+
+message GetExchangeInfoResponse {
+  repeated exchange_gateway.marketdata.v1.MarketSymbol symbols = 1;
+  int64 cached_at_ms = 2;
+  int64 next_refresh_after_ms = 3;
+  string source = 4;
+  repeated exchange_gateway.marketdata.v1.SymbolStatus statuses = 5;
+}
+
+service AggTradeKlineGatewayService {
+  rpc SubscribeKlines(SubscribeKlinesRequest) returns (stream SubscribeKlinesResponse);
+  rpc GetLatestKlines(GetLatestKlinesRequest) returns (GetLatestKlinesResponse);
+  rpc GetHistoricalKlines(GetHistoricalKlinesRequest) returns (GetHistoricalKlinesResponse);
+  rpc GetHistoricalKlineReadiness(GetHistoricalKlineReadinessRequest) returns (GetHistoricalKlineReadinessResponse);
+  rpc SubscribeFeatureBars(SubscribeFeatureBarsRequest) returns (stream SubscribeFeatureBarsResponse);
+  rpc GetLatestFeatureBars(GetLatestFeatureBarsRequest) returns (GetLatestFeatureBarsResponse);
+  rpc GetHistoricalFeatureBars(GetHistoricalFeatureBarsRequest) returns (GetHistoricalFeatureBarsResponse);
+  rpc GetHistoricalFeatureReadiness(GetHistoricalFeatureReadinessRequest) returns (GetHistoricalFeatureReadinessResponse);
+  rpc SubscribeKlineSlices(SubscribeKlineSlicesRequest) returns (stream SubscribeKlineSlicesResponse);
+  rpc GetHistoricalKlineSlices(GetHistoricalKlineSlicesRequest) returns (GetHistoricalKlineSlicesResponse);
+  rpc SubscribeSymbolStatus(SubscribeSymbolStatusRequest) returns (stream exchange_gateway.marketdata.v1.SymbolStatus);
+  rpc GetExchangeInfo(GetExchangeInfoRequest) returns (GetExchangeInfoResponse);
+}
