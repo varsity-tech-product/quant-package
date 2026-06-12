@@ -7,7 +7,8 @@
 ```
 每日 00:05 UTC
   → 解析 universe（CMC TopN 或手工列表）
-  → exchange-gateway 取每 symbol 最近 1000 根 1d bars（readiness 检查 + 失败关闭）
+  → 8778 取每 symbol 最近 ≤300 根 1d bars（readiness 检查 + 失败关闭）
+  → 按需补取 market_features 历史（仅当有因子用到 OI/premium/大户多空比 等字段）
   → 多 plugin 组合：build_signal → 截面 z-score → 加权 composite → 排名取多空
   → 查币安余额 → 计算 delta → 限价挂盘口(超时市价兜底) 调仓
   → 写 data/rebalance_log.jsonl
@@ -17,7 +18,7 @@
 ## 部署步骤
 ```bash
 cd quant-package
-cp .env.example .env            # 填 BINANCE_API_KEY/SECRET（先 testnet）、EXCHANGE_GATEWAY_DIR、CMC_API_KEY
+cp .env.example .env            # 填 BINANCE_API_KEY/SECRET（先 testnet）、CMC_API_KEY；数据地址用默认即可
 cp examples/strategy.example.json strategy.json   # 改成你的因子组合
 pip install -r requirements.txt
 
@@ -52,6 +53,9 @@ python -m quantkit.live.main --strategy strategy.json
 - 下单：限价挂盘口做 Maker，`LIMIT_ORDER_TIMEOUT` 秒未成交撤单市价兜底；单向持仓模式
 
 ## 注意
-- carry 类因子需要 OI/premium/大户多空比**历史**，见 data_service.md「feature 历史」。
+- carry 类因子需要 OI/premium/大户多空比**历史**：现走 8778 `GetHistoricalFeatureBars`
+  （rebalancer 按需补取），其 backfill 成熟度见 data_service.md「feature 历史的成熟度」。
   K 线类因子开箱即用。
-- 下单走币安（testnet/mainnet 按 .env 切）；行情只走数据服务。
+- bars 最多 300 根（8778 上限），即 1d ≈ 300 天历史；需更长窗口的因子先确认。
+- 取数依赖已内置，无需 exchange-gateway 仓库；本机只需装 `grpcurl`。
+- 下单走币安（testnet/mainnet 按 .env 切）；行情走数据服务（klines/features=8778、funding=8777）。
