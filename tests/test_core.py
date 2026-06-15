@@ -88,7 +88,7 @@ def test_target_weights_neutral():
 def test_backtest_validation():
     # test backtest validation
     bt = BacktestClient()
-    assert bt.base == "http://13.215.186.241:8001"
+    assert bt.base == "http://quantai-alb-b-1640784904.ap-southeast-1.elb.amazonaws.com"
     for bad in (
         lambda: bt._validate([Factor("j", "p"), Factor("j", "p")], None),
         lambda: bt._validate([Factor("a", "x")], {"mode": "custom", "weights": [0.6, 0.4]}),

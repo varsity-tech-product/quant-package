@@ -10,7 +10,7 @@ quant-factor-loop 归档拿到 job_id。
 基本用法::
 
     from quantkit.backtest import BacktestClient, Factor
-    bt = BacktestClient()  # 默认 http://13.215.186.241:8001
+    bt = BacktestClient()  # 默认 http://quantai-alb-b-1640784904.ap-southeast-1.elb.amazonaws.com
     resp = bt.submit_cs(
         factors=[Factor("job_xxx", "chaikin_money_flow.py")],
         ranking={"mode": "N", "value": 5},
@@ -27,7 +27,7 @@ import json
 from dataclasses import dataclass
 from typing import Any
 
-DEFAULT_BASE = "http://13.215.186.241:8001"
+DEFAULT_BASE = "http://quantai-alb-b-1640784904.ap-southeast-1.elb.amazonaws.com"
 
 # 服务端字段约束（见文档 §8），本地先校验以减少 422。
 MAX_FACTORS = 5

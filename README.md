@@ -14,7 +14,7 @@ pip install -r requirements.txt
 ```
 
 三大能力：
-1. **组合 + 回测**：`quantkit.backtest` 提交到 `http://13.215.186.241:8001`，轮询取结果。
+1. **组合 + 回测**：`quantkit.backtest` 提交到 `http://quantai-alb-b-1640784904.ap-southeast-1.elb.amazonaws.com`，轮询取结果。
 2. **本地信号**：`quantkit.plugins` + `quantkit.data` + `quantkit.compose`，从数据服务取 1d 行情跑 `build_signal`。
 3. **实盘部署**：`quantkit.live` 币安 Futures 日度调仓（默认 testnet）。
 

@@ -46,7 +46,7 @@ mkdir -p "$WORKDIR"     # 之后所有文件写这里
 
 ```python
 from quantkit.backtest import BacktestClient, Factor
-bt = BacktestClient()                                   # http://13.215.186.241:8001
+bt = BacktestClient()                                   # http://quantai-alb-b-1640784904.ap-southeast-1.elb.amazonaws.com
 resp = bt.submit_cs(
     factors=[Factor("job_xxx","factor_a.py"), Factor("job_yyy","factor_b.py")],
     weighting={"mode":"custom","weights":[0.6,0.4]},

@@ -1,6 +1,6 @@
 # 策略回测提交（速查）
 
-服务地址：`http://13.215.186.241:8001`（无需 API key）。
+服务地址：`http://quantai-alb-b-1640784904.ap-southeast-1.elb.amazonaws.com`（无需 API key）。
 完整文档：`/home/ec2-user/quantai-service/docs/strategy_submit.md`。
 
 在已归档（有 job_id）的因子之上组装策略，提交到 MatchX 回测引擎，轮询取结果。
@@ -19,7 +19,7 @@ s3://quant-factor-loop-archive-apse1/quant/<job_id>/step4/<factor>.py
 ## 用本包提交
 ```python
 from quantkit.backtest import BacktestClient, Factor
-bt = BacktestClient()                                  # http://13.215.186.241:8001
+bt = BacktestClient()                                  # http://quantai-alb-b-1640784904.ap-southeast-1.elb.amazonaws.com
 
 # 截面策略
 resp = bt.submit_cs(

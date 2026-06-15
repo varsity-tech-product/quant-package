@@ -5,7 +5,7 @@
 ## 回测路径
 
 ### 服务连不上（Connection refused）
-`BacktestClient` 所有请求报 `Connection refused` → 回测服务 `13.215.186.241:8001`
+`BacktestClient` 所有请求报 `Connection refused` → 回测服务 `quantai-alb-b-1640784904.ap-southeast-1.elb.amazonaws.com`
 没在跑。**先探活**：
 ```python
 BacktestClient().list_strategies()   # 连不上就是服务没启动，不是用法错

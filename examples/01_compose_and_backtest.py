@@ -23,7 +23,7 @@ JOB_B, PLUGIN_B = "job_20260511_091436_a73c28", "chaikin_money_flow.py"  # demo 
 
 def main() -> None:
     # main
-    bt = BacktestClient()  # 默认 http://13.215.186.241:8001
+    bt = BacktestClient()  # 默认 http://quantai-alb-b-1640784904.ap-southeast-1.elb.amazonaws.com
     print("提交截面策略到", bt.base)
 
     resp = bt.submit_cs(
