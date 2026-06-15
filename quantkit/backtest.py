@@ -30,21 +30,27 @@ from typing import Any
 DEFAULT_BASE = "http://quantai-alb-b-1640784904.ap-southeast-1.elb.amazonaws.com"
 
 # 服务端字段约束（见文档 §8），本地先校验以减少 422。
-MAX_FACTORS = 5
+MAX_FACTORS = 20
 MAX_TS_SYMBOLS = 20
 WEIGHT_SUM_TOL = 1e-6
 
 
 @dataclass
 class Factor:
-    """一个已归档因子的引用。"""
+    """一个已归档因子的引用。
+
+    plugin 可省略：每个 job 只有一个 plugin，省略时服务端按 job_id 自动反查。
+    """
 
     job_id: str
-    plugin: str
+    plugin: str | None = None
 
     def to_dict(self) -> dict[str, str]:
-        # to dict
-        return {"job_id": self.job_id, "plugin": self.plugin}
+        # to dict；plugin 缺省时不下发，让服务端按 job_id 反查
+        d = {"job_id": self.job_id}
+        if self.plugin is not None:
+            d["plugin"] = self.plugin
+        return d
 
 
 class BacktestError(RuntimeError):

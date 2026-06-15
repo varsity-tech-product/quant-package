@@ -38,7 +38,8 @@ bt.submit_ts(symbols=["btcusdt","ethusdt"], factors=[Factor("job_xxx","factor_a.
 ```
 
 ## 关键约束（本地已先校验，减少 422）
-- `factors` 1..5；`(job_id, plugin)` 不能重复
+- `factors` 1..20；`(job_id, plugin)` 不能重复
+- `plugin` 可省略（`Factor(job_id)`），服务端按 job_id 自动反查；旧的 `{job_id, plugin}` 仍兼容
 - `custom` 权重长度=factors、全>0、和=1.0（±1e-6）
 - CS `ranking`：`N` 正整数 / `percent` ∈ (0,50]
 - TS `symbols` 1..20

@@ -103,7 +103,8 @@ load_plugin("example_plugin/carry_dislocation_positioning_mean_reversion.py").re
 | `quantkit.live.*` | 币安实盘日度调仓引擎 |
 
 ## 关键约束
-- 回测 `factors` 1..5、`(job_id,plugin)` 不重复、custom 权重和=1.0、CS percent∈(0,50]
+- 回测 `factors` 1..20、`(job_id,plugin)` 不重复、custom 权重和=1.0、CS percent∈(0,50]
+- `plugin` 可省略：`Factor("job_xxx")` 即可，服务端按 job_id 自动反查（每个 job 只有一个 plugin）
 - 实盘默认 `BINANCE_TESTNET=true`，确认无误再切主网
 - 数据服务只需本机 `grpcurl`（取数依赖已内置）；只用 1d，bars 上限 300 根
 - 卡住先查 `reference/troubleshooting.md`（服务探活 / grpcurl 安装 / 字段缺失 / cwd 依赖）
