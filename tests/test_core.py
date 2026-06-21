@@ -89,17 +89,24 @@ def test_backtest_validation():
     # test backtest validation
     bt = BacktestClient()
     assert bt.base == "http://quantai-alb-b-1640784904.ap-southeast-1.elb.amazonaws.com"
+    fa = Factor.from_content("A = 1", name="a")
+    fb = Factor.from_content("B = 2", name="b")
     for bad in (
-        lambda: bt._validate([Factor("j", "p"), Factor("j", "p")], None),
-        lambda: bt._validate([Factor("a", "x")], {"mode": "custom", "weights": [0.6, 0.4]}),
-        lambda: bt._validate([Factor("a", "x"), Factor("b", "y")], {"mode": "custom", "weights": [0.6, 0.5]}),
+        lambda: bt._validate([fa], {"mode": "custom", "weights": [0.6, 0.4]}),       # 权重数 != 因子数
+        lambda: bt._validate([fa, fb], {"mode": "custom", "weights": [0.6, 0.5]}),   # 权重和 != 1.0
     ):
         try:
             bad()
             raise AssertionError("应抛 ValueError")
         except ValueError:
             pass
-    bt._validate([Factor("a", "x"), Factor("b", "y")], {"mode": "custom", "weights": [0.6, 0.4]})
+    # content 模式不去重：两个相同因子也合法
+    bt._validate([fa, fa], None)
+    bt._validate([fa, fb], {"mode": "custom", "weights": [0.6, 0.4]})
+    # from_file 默认 name 取文件 stem
+    f_file = Factor.from_file(ROOT / "example_plugin" / "flow_confirmed_smooth_trend_momentum.py")
+    assert f_file.name == "flow_confirmed_smooth_trend_momentum"
+    assert "plugin_content" in f_file.to_dict() and "job_id" not in f_file.to_dict()
     print("test_backtest_validation OK")
 
 
