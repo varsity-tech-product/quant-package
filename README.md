@@ -21,7 +21,7 @@ pip install -r requirements.txt
 ## 快速开始
 ```bash
 python examples/02_inspect_plugin.py          # 看因子需要哪些字段
-python examples/01_compose_and_backtest.py    # 组合+回测（改成你的 job_id）
+python examples/01_compose_and_backtest.py    # 组合+回测（改成你的因子 .py 路径）
 python examples/03_fetch_data.py BTCUSDT ETHUSDT   # 取 1d 数据（需 grpcurl + 数据服务）
 python examples/04_deploy_live.py             # 实盘跑一次（需 .env + strategy.json）
 ```
@@ -39,7 +39,7 @@ python examples/04_deploy_live.py             # 实盘跑一次（需 .env + str
 quantkit/         核心库（plugins / backtest / compose / data / live）
 examples/         端到端样例脚本 + strategy.example.json
 example_plugin/   3 个样例因子 plugin（演示插件格式）
-sample_factors/   12 个带 job_id 的归档因子（无自有因子时直接回测，catalog.json 索引）
+sample_factors/   12 个归档样例因子（无自有因子时直接回测，catalog.json 索引）
 reference/        细节文档
 scripts/commit.sh 频繁提交小工具
 ```
