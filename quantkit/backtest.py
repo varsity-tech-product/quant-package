@@ -1,18 +1,17 @@
 """策略回测服务客户端。
 
 封装 ``/home/ec2-user/quantai-service/docs/strategy_submit.md`` 描述的接口：
-在已归档（有 job_id）的因子之上组装策略，提交到 MatchX 回测引擎，轮询拿结果。
+把因子 plugin 的源码内容直接提交，服务端组装策略跑 MatchX 回测，轮询拿结果。
 
 注意：回测路径**不在本地算信号**——服务端用 plugin 的 C# 片段编译跑 Lean。
-本地只需提供 ``{job_id, plugin}`` 即可。本地任意 plugin 想回测，需先经
-quant-factor-loop 归档拿到 job_id。
+本地只需把整段 plugin .py 源码发过去（content 模式），无需 job_id、不查 S3/EFS。
 
 基本用法::
 
     from quantkit.backtest import BacktestClient, Factor
     bt = BacktestClient()  # 默认 http://quantai-alb-b-1640784904.ap-southeast-1.elb.amazonaws.com
     resp = bt.submit_cs(
-        factors=[Factor("job_xxx", "chaikin_money_flow.py")],
+        factors=[Factor.from_file("sample_factors/trend_pullback_resumption.py")],
         ranking={"mode": "N", "value": 5},
     )
     state = bt.wait(resp["strategy_id"])
@@ -25,6 +24,7 @@ import urllib.error
 import urllib.request
 import json
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Any
 
 DEFAULT_BASE = "http://quantai-alb-b-1640784904.ap-southeast-1.elb.amazonaws.com"
@@ -37,19 +37,37 @@ WEIGHT_SUM_TOL = 1e-6
 
 @dataclass
 class Factor:
-    """一个已归档因子的引用。
+    """一个因子，由 plugin 的源码内容直接定义（content 模式）。
 
-    plugin 可省略：每个 job 只有一个 plugin，省略时服务端按 job_id 自动反查。
+    回测服务端用 plugin 的 C# 片段编译跑 Lean，本地只需把整段 .py 源码发过去，
+    无需 job_id、不查 S3/EFS。``name`` 是该因子在 meta / 类名里的标识，缺省时
+    服务端回退到 plugin 里的 ``FACTOR_TYPE``。
+
+    构造方式::
+
+        Factor.from_file("sample_factors/trend_pullback_resumption.py")
+        Factor.from_content(src_text, name="my_factor")
     """
 
-    job_id: str
-    plugin: str | None = None
+    plugin_content: str
+    name: str | None = None
+
+    @classmethod
+    def from_file(cls, path: str | Path, name: str | None = None) -> "Factor":
+        # 从 .py 文件读出整段源码；name 缺省取文件名 stem。
+        p = Path(path)
+        return cls(plugin_content=p.read_text(encoding="utf-8"), name=name or p.stem)
+
+    @classmethod
+    def from_content(cls, content: str, name: str | None = None) -> "Factor":
+        # 从内存中的源码字符串构造。
+        return cls(plugin_content=content, name=name)
 
     def to_dict(self) -> dict[str, str]:
-        # to dict；plugin 缺省时不下发，让服务端按 job_id 反查
-        d = {"job_id": self.job_id}
-        if self.plugin is not None:
-            d["plugin"] = self.plugin
+        # to dict；name 为空时不下发，让服务端回退到 FACTOR_TYPE。
+        d: dict[str, str] = {"plugin_content": self.plugin_content}
+        if self.name:
+            d["name"] = self.name
         return d
 
 
@@ -87,12 +105,7 @@ class BacktestClient:
         # validate
         if not 1 <= len(factors) <= MAX_FACTORS:
             raise ValueError(f"factors 数量必须 1..{MAX_FACTORS}，当前 {len(factors)}")
-        seen = set()
-        for f in factors:
-            key = (f.job_id, f.plugin)
-            if key in seen:
-                raise ValueError(f"重复的 (job_id, plugin): {key}")
-            seen.add(key)
+        # content 模式不去重：传几个就是几个因子（重复 = 权重翻倍，由调用方负责）。
         if weighting and weighting.get("mode") == "custom":
             w = weighting.get("weights") or []
             if len(w) != len(factors):
