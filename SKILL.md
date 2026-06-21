@@ -1,13 +1,14 @@
 ---
 name: quant-package
 description: >-
-  Compose cross-sectional crypto factors (quant-factor-loop plugins) into a
-  strategy, submit it to the backtest service, read results, and deploy it to
-  Binance Futures live trading. Use when the user wants to combine factors into
-  a strategy, run a strategy backtest, inspect backtest results, or deploy a
-  composed factor strategy to live trading. Data comes from the in-house
-  exchange-gateway service (1d; klines/features via 8778, funding via 8777),
-  not Binance market feeds. 取数依赖已内置，只需本机装 grpcurl。
+  Compose cross-sectional crypto factor plugins (quant-factor-loop step4 .py)
+  into a strategy by submitting the plugin source directly — no job_id — then
+  run the backtest, read results, and deploy to Binance Futures live trading.
+  Use when the user wants to combine factors into a strategy, run a strategy
+  backtest, inspect backtest results, or deploy a composed factor strategy to
+  live trading. Data comes from the in-house exchange-gateway service (1d;
+  klines/features via 8778, funding via 8777), not Binance market feeds.
+  取数依赖已内置，只需本机装 grpcurl。
 ---
 
 # quant-package
@@ -15,7 +16,7 @@ description: >-
 把用户挖到的**截面因子 plugin** 组合成策略 → 提交回测 → 取结果 → 部署币安实盘。
 
 代码在本仓 `quantkit/`，样例在 `examples/`，细节文档在 `reference/`，
-**可直接回测的样例因子**（带 job_id）在 `sample_factors/`。
+**可直接回测的样例因子**在 `sample_factors/`。
 
 ## 何时用
 - 「把因子 A、B 组合成策略回测一下」→ 能力 ①②
@@ -31,24 +32,26 @@ mkdir -p "$WORKDIR"     # 之后所有文件写这里
 ```
 不要把产出散在 package 目录里。
 
-## 用户没有自己的 job_id / plugin？用 sample_factors/
-真实回测需要 `{job_id, plugin}`。用户没有的话，直接用本仓 `sample_factors/` 里的
-归档因子（文件名 = `<job_id>__<plugin>.py`，清单见 `sample_factors/catalog.json`）。
+## 用户没有自己的因子 plugin？用 sample_factors/
+回测只需一份 plugin .py 的内容。用户没有的话，直接用本仓 `sample_factors/` 里的
+归档因子（文件名 = `<job_id>__<plugin>.py`，job_id 前缀仅作来源溯源；清单见
+`sample_factors/catalog.json`）。
 - 优先选 `catalog.json` 里 `live_ready=true` 的**纯量价**因子。
 - 用法见 `sample_factors/README.md`。
 
 ## 三条主路径
 
 ### ① + ② 组合因子 → 提交回测 → 取结果
-回测**不在本地算信号**：服务端用 plugin 的 C# 片段编译跑 Lean，本地只给
-`{job_id, plugin}`。job_id 来自 quant-factor-loop 归档（找法见
-`reference/backtest_submit.md`）。
+回测**不在本地算信号**：服务端用 plugin 的 C# 片段编译跑 Lean，本地只把整段
+plugin .py 源码发过去（content 模式），**不需要 job_id**。`Factor.from_file()`
+读文件，`Factor.from_content()` 收内存里的源码字符串。
 
 ```python
 from quantkit.backtest import BacktestClient, Factor
 bt = BacktestClient()                                   # http://quantai-alb-b-1640784904.ap-southeast-1.elb.amazonaws.com
 resp = bt.submit_cs(
-    factors=[Factor("job_xxx","factor_a.py"), Factor("job_yyy","factor_b.py")],
+    factors=[Factor.from_file("sample_factors/...a.py", name="factor_a"),
+             Factor.from_file("/mnt/efs-b/quant-factor-loop/.quant/job_xxx/step4/b.py")],
     weighting={"mode":"custom","weights":[0.6,0.4]},
     ranking={"mode":"N","value":5}, strategy_type="neutral",
 )
@@ -57,7 +60,7 @@ print(bt.summary(sid)["metrics"])
 ```
 样例：`examples/01_compose_and_backtest.py`。细节：`reference/backtest_submit.md`。
 
-> 样例 `example_plugin/` 只演示插件格式；真实回测提交用**已归档有 job_id** 的因子。
+> 样例 `example_plugin/` 也能直接回测；它演示的就是 plugin 标准格式。
 
 ### ③ 部署币安实盘（日度调仓）
 实盘**在本地跑 `build_signal`**，数据走 exchange-gateway（只用 1d；bars/feature=8778、
@@ -103,8 +106,8 @@ load_plugin("example_plugin/carry_dislocation_positioning_mean_reversion.py").re
 | `quantkit.live.*` | 币安实盘日度调仓引擎 |
 
 ## 关键约束
-- 回测 `factors` 1..20、`(job_id,plugin)` 不重复、custom 权重和=1.0、CS percent∈(0,50]
-- `plugin` 可省略：`Factor("job_xxx")` 即可，服务端按 job_id 自动反查（每个 job 只有一个 plugin）
+- 回测 `factors` 1..20、custom 权重和=1.0、CS percent∈(0,50]；**content 模式不去重**（传重复=权重翻倍）
+- 每个因子用 `Factor.from_file(path)`（name 缺省取文件 stem）或 `Factor.from_content(src, name)`；不再传 job_id
 - 实盘默认 `BINANCE_TESTNET=true`，确认无误再切主网
 - 数据服务只需本机 `grpcurl`（取数依赖已内置）；只用 1d，bars 上限 300 根
 - 卡住先查 `reference/troubleshooting.md`（服务探活 / grpcurl 安装 / 字段缺失 / cwd 依赖）
