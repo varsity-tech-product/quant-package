@@ -1,7 +1,7 @@
-# 内置样例因子库（已归档，带 job_id）
+# 内置样例因子库（quant-factor-loop 归档）
 
-给**没有自己 job_id / plugin** 的用户：这里 12 个因子都来自 quant-factor-loop 归档，
-**可直接用于回测提交**（回测需要 `{job_id, plugin}`，已编进文件名）。
+给**没有自己因子**的用户：这里 12 个因子都来自 quant-factor-loop 归档，
+**可直接用于回测提交**——把文件内容发给服务端即可，无需 job_id。
 
 ## 文件名约定
 ```
@@ -9,26 +9,30 @@
 例：job_20260418_185701_5a9c12__trend_pullback_resumption.py
    └── job_id ────────────┘   └── plugin = trend_pullback_resumption.py
 ```
-机器可读清单见 `catalog.json`（每条含 job_id / plugin / factor_type / required_fields /
-是否纯量价）。
+> job_id 前缀只作**来源溯源**，提交回测时**不再需要**它。
+机器可读清单见 `catalog.json`（每条含 file / plugin / factor_type / required_fields /
+是否纯量价；job_id 字段保留作溯源）。
 
 ## 怎么用
 
 ### 回测（推荐入口，无需本地数据）
-直接拿 job_id + plugin 提交，信号由服务端算：
+`Factor.from_file` 把文件内容发过去，信号由服务端算：
 ```python
 from quantkit.backtest import BacktestClient, Factor
 bt = BacktestClient()
 resp = bt.submit_cs(
     factors=[
-        Factor("job_20260418_185701_5a9c12", "trend_pullback_resumption.py"),
-        Factor("job_20260418_185743_02d1a2", "range_quote_inefficiency_reversal.py"),
+        Factor.from_file("sample_factors/job_20260418_185701_5a9c12__trend_pullback_resumption.py",
+                         name="trend_pullback_resumption"),
+        Factor.from_file("sample_factors/job_20260418_185743_02d1a2__range_quote_inefficiency_reversal.py",
+                         name="range_quote_inefficiency_reversal"),
     ],
     weighting={"mode": "custom", "weights": [0.6, 0.4]},
     ranking={"mode": "N", "value": 5}, strategy_type="neutral",
 )
 bt.wait(resp["strategy_id"]); print(bt.summary(resp["strategy_id"])["metrics"])
 ```
+> `name` 选填——不传则默认取文件名 stem（这里会带 `job_..__` 前缀），传个干净名字更好看。
 
 ### 实盘 / 本地跑信号
 本地 `build_signal` 用文件路径加载即可：
