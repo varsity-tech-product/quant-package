@@ -42,5 +42,5 @@ p.required_fields
 某字段在数据源里找不到时抛 `MissingFieldError`，不会静默填 0。
 
 ## 两条路径用 plugin 的方式不同
-- **回测提交**：服务端用 `FACTOR_SECTIONS`（C#）编译跑 Lean。本地只需 `{job_id, plugin}`，**不跑 build_signal**。
+- **回测提交**：服务端用 `FACTOR_SECTIONS`（C#）编译跑 Lean。本地只需把整段 plugin .py 源码发过去（`Factor.from_file`），**不跑 build_signal**、不需要 job_id。
 - **实盘**：本地跑 `build_signal`（见 `quantkit.data.panels.run_build_signal` / `quantkit.compose`）。
