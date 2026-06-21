@@ -9,7 +9,7 @@
 
 这样实盘的组合方式与提交回测时服务端的组合方式一致，回测/实盘可比。
 
-回测提交路径不用这里——那条路只需把 ``{job_id, plugin}`` + ``weighting`` 交给
+回测提交路径不用这里——那条路只需把 plugin 源码内容 + ``weighting`` 交给
 服务端，由服务端组合（见 :mod:`quantkit.backtest`）。这里是**实盘本地**用的。
 """
 from __future__ import annotations
