@@ -266,3 +266,106 @@ def calc_prediction_style_exposure(
         "roll_window": roll_window,
         "attribution_type": "prediction",
     }
+
+
+def plot_prediction_style_exposure(
+    style_result: dict,
+    time_col: str = "timestamp",
+    title_prefix: str = "Prediction",
+    top_n: int = 8,
+    save_path: str | None = None,
+) -> None:
+    """Plot long-short exposure, long/short exposure, and rolling style correlation.
+
+    ``save_path`` is the only local addition to the vendored function: when given,
+    the figure is written there (无头环境) instead of ``plt.show()``; default
+    behavior (show) is unchanged.
+    """
+    style_cols = list(style_result.get("style_cols", []))
+    long_exp = style_result.get("long_exposure", pd.Series(dtype=float))
+    short_exp = style_result.get("short_exposure", pd.Series(dtype=float))
+    long_short_exp = style_result.get("long_short_exposure", pd.Series(dtype=float))
+    roll_corr = style_result.get("roll_corr", pd.DataFrame())
+
+    if not style_cols or long_short_exp.empty:
+        print("No style exposure data to plot.")
+        return
+
+    ranked_cols = (
+        long_short_exp.reindex(style_cols)
+        .abs()
+        .sort_values(ascending=False)
+        .head(top_n)
+        .index.tolist()
+    )
+
+    fig, axes = plt.subplots(1, 3, figsize=(20, 5))
+
+    ax = axes[0]
+    ls_vals = long_short_exp.reindex(ranked_cols)
+    colors = np.where(ls_vals >= 0, "#2ca02c", "#d62728")
+    ax.bar(np.arange(len(ranked_cols)), ls_vals.values, color=colors, alpha=0.85)
+    ax.axhline(0, color="gray", linewidth=0.8, linestyle="--")
+    ax.set_xticks(np.arange(len(ranked_cols)))
+    ax.set_xticklabels(
+        [s.replace("style_", "").replace("_", "\n") for s in ranked_cols],
+        fontsize=8,
+        rotation=45,
+        ha="right",
+    )
+    ax.set_title(f"{title_prefix} - Long-Short Style Exposure")
+    ax.set_ylabel("Avg CS Z-Score")
+    ax.grid(True, axis="y", linestyle="--", alpha=0.3)
+
+    ax = axes[1]
+    x_pos = np.arange(len(ranked_cols))
+    width = 0.35
+    ax.bar(
+        x_pos - width / 2,
+        long_exp.reindex(ranked_cols).values,
+        width,
+        label="Long",
+        color="#2ca02c",
+        alpha=0.8,
+    )
+    ax.bar(
+        x_pos + width / 2,
+        short_exp.reindex(ranked_cols).values,
+        width,
+        label="Short",
+        color="#d62728",
+        alpha=0.8,
+    )
+    ax.axhline(0, color="gray", linewidth=0.8, linestyle="--")
+    ax.set_xticks(x_pos)
+    ax.set_xticklabels(
+        [s.replace("style_", "").replace("_", "\n") for s in ranked_cols],
+        fontsize=8,
+        rotation=45,
+        ha="right",
+    )
+    ax.set_title(f"{title_prefix} - Long / Short Style Exposure")
+    ax.set_ylabel("Avg CS Z-Score")
+    ax.legend(fontsize=8)
+    ax.grid(True, axis="y", linestyle="--", alpha=0.3)
+
+    ax = axes[2]
+    if not roll_corr.empty:
+        plot_df = roll_corr.copy()
+        plot_df[time_col] = pd.to_datetime(plot_df[time_col])
+        for col in ranked_cols:
+            if col in plot_df.columns:
+                ax.plot(plot_df[time_col], plot_df[col], linewidth=1.1, label=col.replace("style_", ""))
+        ax.axhline(0, color="gray", linewidth=0.8, linestyle="--")
+        ax.legend(fontsize=7, ncol=2, loc="upper left")
+    ax.set_title(f"{title_prefix} - Rolling Style Corr, {style_result.get('roll_window', 60)}")
+    ax.set_xlabel("Time")
+    ax.set_ylabel("Spearman Corr")
+    ax.grid(True, linestyle="--", alpha=0.3)
+
+    fig.tight_layout()
+    if save_path is not None:
+        fig.savefig(save_path, dpi=120, bbox_inches="tight")
+        plt.close(fig)
+    else:
+        plt.show()
