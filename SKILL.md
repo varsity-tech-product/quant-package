@@ -103,6 +103,8 @@ load_plugin("example_plugin/carry_dislocation_positioning_mean_reversion.py").re
 | `quantkit.data.gateway_client` | 取 1d bars/readiness/feature(8778) + funding(8777)；取数依赖内置于 `_gateway/` |
 | `quantkit.data.panels` | 切面板 + 本地跑 build_signal |
 | `quantkit.compose` | 多因子截面 z-score 加权 composite → 截面权重 |
+| `quantkit.attribution` | 策略预测值风格归因（compose+data 胶水：composite→pred_df、bars→base_df） |
+| `quantkit.style_attribution` | 风格归因核心算法（vendored，口径见 `reference/style_attribution.md`） |
 | `quantkit.live.*` | 币安实盘日度调仓引擎 |
 
 ## 关键约束
