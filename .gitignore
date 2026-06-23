@@ -10,3 +10,7 @@ quantkit/live/data/
 quantkit/live/logs/
 /runtime_data/
 *.log
+# 风格归因示例产物
+/style_attribution.png
+/style_exposure.json
+/style_roll_corr.csv
