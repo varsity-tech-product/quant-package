@@ -159,3 +159,110 @@ def build_base_style_factors(
 
     cols = [time_col, symbol_col] + DEFAULT_STYLE_COLS
     return d[cols].sort_values([time_col, symbol_col]).reset_index(drop=True)
+
+
+def calc_prediction_style_exposure(
+    eval_df: pd.DataFrame,
+    pred_col: str,
+    style_df: pd.DataFrame,
+    style_cols: Sequence[str] | None = None,
+    top_pct: float = 0.1,
+    time_col: str = "timestamp",
+    symbol_col: str = "symbol",
+    min_cs_size: int = 20,
+    roll_window: int = 60,
+) -> dict:
+    """Measure prediction long/short buckets against style factors."""
+    if not 0 < top_pct < 0.5:
+        raise ValueError("top_pct must be in (0, 0.5)")
+
+    styles = style_df.copy()
+    styles[time_col] = to_utc_datetime(styles[time_col])
+
+    if style_cols is None:
+        style_cols = [
+            c
+            for c in DEFAULT_STYLE_COLS
+            if c in styles.columns and pd.api.types.is_numeric_dtype(styles[c])
+        ]
+    style_cols = list(style_cols)
+    if not style_cols:
+        raise ValueError("No style columns found for attribution")
+
+    styles = _cs_standardize_style_factors(
+        styles[[time_col, symbol_col] + style_cols].copy(),
+        style_cols,
+        time_col=time_col,
+    )
+
+    required = {time_col, symbol_col, pred_col}
+    missing = required.difference(eval_df.columns)
+    if missing:
+        raise ValueError(f"eval_df missing columns: {sorted(missing)}")
+
+    d = eval_df[[time_col, symbol_col, pred_col]].copy()
+    d[time_col] = to_utc_datetime(d[time_col])
+    d[pred_col] = pd.to_numeric(d[pred_col], errors="coerce")
+    d = d.dropna(subset=[pred_col]).merge(styles, on=[time_col, symbol_col], how="left")
+
+    long_rows, short_rows, corr_rows = [], [], []
+    for t, g in d.groupby(time_col, sort=True):
+        valid_pred = g.dropna(subset=[pred_col])
+        if len(valid_pred) < min_cs_size:
+            continue
+
+        n = len(valid_pred)
+        k = max(int(n * top_pct), 1)
+        rank = valid_pred[pred_col].rank(method="first")
+        long_g = valid_pred.loc[rank > (n - k)]
+        short_g = valid_pred.loc[rank <= k]
+
+        row_l = {time_col: t}
+        row_s = {time_col: t}
+        row_c = {time_col: t}
+        for col in style_cols:
+            row_l[col] = float(long_g[col].mean()) if not long_g[col].isna().all() else np.nan
+            row_s[col] = float(short_g[col].mean()) if not short_g[col].isna().all() else np.nan
+
+            valid = valid_pred[pred_col].notna() & valid_pred[col].notna()
+            row_c[col] = (
+                float(valid_pred.loc[valid, pred_col].corr(valid_pred.loc[valid, col], method="spearman"))
+                if valid.sum() >= min_cs_size
+                else np.nan
+            )
+
+        long_rows.append(row_l)
+        short_rows.append(row_s)
+        corr_rows.append(row_c)
+
+    long_ts = pd.DataFrame(long_rows)
+    short_ts = pd.DataFrame(short_rows)
+    roll_corr = pd.DataFrame(corr_rows)
+    if not roll_corr.empty:
+        roll_corr = roll_corr.sort_values(time_col).set_index(time_col)
+        roll_corr = roll_corr.rolling(
+            roll_window,
+            min_periods=min(10, roll_window),
+        ).mean().reset_index()
+
+    long_exp = long_ts[style_cols].mean() if not long_ts.empty else pd.Series(dtype=float)
+    short_exp = short_ts[style_cols].mean() if not short_ts.empty else pd.Series(dtype=float)
+    long_short_exp = (
+        long_exp - short_exp
+        if not long_exp.empty and not short_exp.empty
+        else pd.Series(dtype=float)
+    )
+
+    return {
+        "long_exposure": long_exp,
+        "short_exposure": short_exp,
+        "long_short_exposure": long_short_exp,
+        "long_ts": long_ts,
+        "short_ts": short_ts,
+        "roll_corr": roll_corr,
+        "style_frame": styles,
+        "style_cols": style_cols,
+        "top_pct": top_pct,
+        "roll_window": roll_window,
+        "attribution_type": "prediction",
+    }
