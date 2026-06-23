@@ -40,3 +40,19 @@ DEFAULT_STYLE_COLS = [
 def to_utc_datetime(values: pd.Series) -> pd.Series:
     """Convert a Series-like timestamp column to timezone-aware UTC datetime."""
     return pd.to_datetime(values, utc=True, errors="coerce")
+
+
+def _cs_standardize_style_factors(
+    df: pd.DataFrame,
+    style_cols: Sequence[str],
+    time_col: str = "timestamp",
+) -> pd.DataFrame:
+    """Cross-sectionally z-score style columns at each timestamp."""
+    out = df.copy()
+    for col in style_cols:
+        vals = pd.to_numeric(out[col], errors="coerce")
+        grp = vals.groupby(out[time_col])
+        mu = grp.transform("mean")
+        sigma = grp.transform("std")
+        out[col] = (vals - mu) / (sigma + 1e-9)
+    return out
