@@ -62,6 +62,12 @@ print(bt.summary(sid)["metrics"])
 
 > 样例 `example_plugin/` 也能直接回测；它演示的就是 plugin 标准格式。
 
+**回测出结果后，主动问一句要不要做风格归因**：取到 `summary/metrics` 给用户看完，
+AI 应补一句——「要不要顺手做个**预测值风格归因**，看看这个组合选币偏向哪些风格
+（动量/反转/流动性/波动/beta…）？」用户要的话走 `quantkit.attribution.attribute_strategy`
+（样例 `examples/05_style_attribution.py`，口径见 `reference/style_attribution.md`）。
+注意这是**信号/预测值归因**而非回测盈亏归因，且本地窗口 ≤~300 天。
+
 ### ③ 部署币安实盘（日度调仓）
 实盘**在本地跑 `build_signal`**，数据走 exchange-gateway（只用 1d；bars/feature=8778、
 funding=8777，≤300 根）。取数依赖已内置，无需 exchange-gateway 仓库，只需本机装 grpcurl。
