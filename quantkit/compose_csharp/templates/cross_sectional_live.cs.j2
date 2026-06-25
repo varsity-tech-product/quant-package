@@ -188,6 +188,7 @@ namespace QuantConnect.Algorithm.CSharp
 
         private int _barsSinceRebalance = 0;
         private int _maxRequiredBars = 1;
+        private bool _dryRun;
 
         public override void Initialize()
         {
@@ -195,6 +196,10 @@ namespace QuantConnect.Algorithm.CSharp
             // Live mode runs forward from "now"; no SetEndDate.
             SetCash({{ initial_cash }});
             SetTimeZone(TimeZones.Utc);
+
+            // Safety gate: default true → compute & log target weights but place NO
+            // orders. Set dry-run=false explicitly to trade for real.
+            _dryRun = GetParameter("dry-run", "true").Trim().Equals("true", StringComparison.OrdinalIgnoreCase);
 
             var resolution = Resolution.{{ lean_resolution }};
 
@@ -384,6 +389,17 @@ namespace QuantConnect.Algorithm.CSharp
             shortSet.ExceptWith(longSet);
 
             // ── Step 4: liquidate stale positions, then size new ones equally ──
+            int total = longSet.Count + shortSet.Count;
+            decimal lw = longSet.Count > 0 && total > 0 ? 1.0m / total : 0m;
+            decimal sw = shortSet.Count > 0 && total > 0 ? -1.0m / total : 0m;
+
+            if (_dryRun)
+            {
+                Log($"[REBALANCE dry-run] {Time:yyyy-MM-dd} candidates={candidates.Count} k={k} " +
+                    $"long=[{string.Join(",", longSet)}]@{lw} short=[{string.Join(",", shortSet)}]@{sw} (no orders placed)");
+                return;
+            }
+
             foreach (var h in Portfolio.Values.Where(h => h.Invested).ToList())
             {
                 var hp = h.Symbol.Value.ToUpperInvariant();
@@ -391,10 +407,7 @@ namespace QuantConnect.Algorithm.CSharp
                     Liquidate(h.Symbol);
             }
 
-            int total = longSet.Count + shortSet.Count;
             if (total == 0) return;
-            decimal lw = longSet.Count > 0 ? 1.0m / total : 0m;
-            decimal sw = shortSet.Count > 0 ? -1.0m / total : 0m;
             foreach (var s in longSet)  SetHoldings(_tradable[s], lw);
             foreach (var s in shortSet) SetHoldings(_tradable[s], sw);
 
