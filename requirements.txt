@@ -7,5 +7,7 @@ python-dotenv>=1.0
 # 风格归因（quantkit.style_attribution / quantkit.attribution）画图 + Spearman 相关
 matplotlib>=3.7
 scipy>=1.10
+# 因子组合 → Lean 实盘 C# 策略渲染（quantkit.compose_csharp）
+jinja2>=2.11
 # 回测客户端只用标准库 urllib，无需额外依赖
 # 数据服务：仅依赖系统已安装 grpcurl（参考客户端 + proto 已内置于 quantkit/data/_gateway）
