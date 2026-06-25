@@ -1,0 +1,438 @@
+/*
+ * Cross-sectional composite LIVE strategy (binance_direct) — auto-generated.
+ *
+ * Class:        {{ class_name }}
+ * Generated:    {{ generated_at }}
+ * Factors ({{ factors|length }}):
+{%- for f in factors %}
+ *   #{{ loop.index0 }}  {{ f.factor_type }}
+{%- endfor %}
+ * Universe:     {{ all_symbols|length }} tradable Binance USD-M futures
+ * Rule:         rank by composite score ({{ weighting_mode }} weighted), pick
+ *               {%- if rank_mode == "N" %} top/bot {{ rank_value|int }} {% else %} top/bot {{ rank_value }}% {% endif %}, strategy_type={{ strategy_type }}.
+ *
+ * Execution:    LEAN_EXECUTION_PROFILE=binance_direct
+ *               - Tradables via AddCryptoFuture(..., Market.Binance) → orders go
+ *                 directly to Binance USD-M Futures (ExchangeGatewayBinanceFuturesDirectBrokerage).
+ *               - Price (OHLCV) from the live 8778 feed as Lean TradeBar.
+{%- if subscribe_features %}
+ *               - Extra futures/on-chain columns from the 8778 market_features
+ *                 stream via MatchXKlineWithCoinglassBar (DQH reflection-fills it).
+{%- endif %}
+ *
+ * The FactorState classes + Rebalance() math below are byte-identical to the
+ * backtest composite, so live trades on the SAME composite signal the backtest used.
+ *
+ * INTEGRATION NOTES (confirm during smoke — see reference/lean_live_composer.md):
+ *   1. binance_direct has NO IHistoryProvider wired, so SetWarmUp does NOT backfill.
+ *      Ring buffers fill forward from live bars; symbols are skipped (insufficient
+ *      bars) until warm. For long-lookback 1d factors this is a multi-day cold start.
+ *   2. The market_features subscription symbol must map to the gateway exchange the
+ *      same way AddCryptoFuture does; verify features actually arrive in smoke.
+ */
+
+using System;
+using System.Collections.Generic;
+using System.Globalization;
+using System.IO;
+using System.Linq;
+using NodaTime;
+using QuantConnect;
+using QuantConnect.Algorithm;
+using QuantConnect.Data;
+using QuantConnect.Data.Market;
+using QuantConnect.Securities;
+
+namespace QuantConnect.Algorithm.CSharp
+{
+{%- if subscribe_features %}
+    /// <summary>
+    /// market_features carrier. The live ExchangeGatewayDataQueueHandler routes a
+    /// subscription to the feature stream ONLY when the data type is named exactly
+    /// "MatchXKlineWithCoinglassBar" (IsFeatureDataType), then reflection-fills the
+    /// decimal properties below from the feature columns (LegacyCoinglassMappings).
+    /// Missing cells become MissingValue, which we convert to double.NaN downstream
+    /// so the per-factor NaN guard can skip that symbol cleanly.
+    /// </summary>
+    public class MatchXKlineWithCoinglassBar : BaseData
+    {
+        public const decimal MissingValue = -999999999m;
+
+        public decimal Open { get; set; }
+        public decimal High { get; set; }
+        public decimal Low { get; set; }
+        public decimal Close { get; set; }
+        public decimal Volume { get; set; }
+        public decimal TakerBuyVolume { get; set; }
+        public decimal TakerSellVolume { get; set; }
+        public decimal TakerBuyQuoteVolume { get; set; }
+        public decimal TakerSellQuoteVolume { get; set; }
+        public decimal TakerBuyTrades { get; set; }
+        public decimal TakerSellTrades { get; set; }
+        public decimal OpenInterestOpen { get; set; }
+        public decimal OpenInterestHigh { get; set; }
+        public decimal OpenInterestLow { get; set; }
+        public decimal OpenInterestClose { get; set; }
+        public decimal FundingRateOpen { get; set; }
+        public decimal FundingRateHigh { get; set; }
+        public decimal FundingRateLow { get; set; }
+        public decimal FundingRateClose { get; set; }
+        public decimal GlobalAccountLongPercent { get; set; }
+        public decimal GlobalAccountShortPercent { get; set; }
+        public decimal GlobalAccountLongShortRatio { get; set; }
+        public decimal TopPositionLongPercent { get; set; }
+        public decimal TopPositionShortPercent { get; set; }
+        public decimal TopPositionLongShortRatio { get; set; }
+        public decimal TopAccountLongPercent { get; set; }
+        public decimal TopAccountShortPercent { get; set; }
+        public decimal TopAccountLongShortRatio { get; set; }
+        public decimal BinancePremiumIndexOpen { get; set; }
+        public decimal BinancePremiumIndexHigh { get; set; }
+        public decimal BinancePremiumIndexLow { get; set; }
+        public decimal BinancePremiumIndexClose { get; set; }
+        public decimal LiquidationLongUsd { get; set; }
+        public decimal LiquidationShortUsd { get; set; }
+        public override DateTime EndTime { get; set; }
+
+        // In live mode the DQH publishes instances directly (Activator + reflection);
+        // GetSource/Reader are required BaseData overrides but are not exercised live.
+        public override SubscriptionDataSource GetSource(SubscriptionDataConfig config, DateTime date, bool isLiveMode)
+            => new SubscriptionDataSource(string.Empty, SubscriptionTransportMedium.LocalFile, FileFormat.Csv);
+
+        public override BaseData Reader(SubscriptionDataConfig config, string line, DateTime date, bool isLiveMode)
+            => null;
+
+        public override bool RequiresMapping() => false;
+        public override bool IsSparseData() => false;
+        public override DateTimeZone DataTimeZone() => TimeZones.Utc;
+        public override Resolution DefaultResolution() => Resolution.Daily;
+        public override List<Resolution> SupportedResolutions() => new List<Resolution> { Resolution.Hour, Resolution.Daily };
+    }
+{%- endif %}
+
+    /// <summary>
+    /// Per-symbol merged bar: OHLCV (from the live TradeBar) + futures/on-chain
+    /// columns (from market_features). Field names &amp; types mirror the backtest
+    /// FactorCsvBar exactly so the vendored factor fragments compile unchanged.
+    /// Extra columns default to double.NaN until a feature value is merged in.
+    /// </summary>
+    public class LiveFactorBar
+    {
+        public decimal Open;
+        public decimal High;
+        public decimal Low;
+        public decimal Close;
+        public decimal Volume;
+        public double TakerBuyVolume       = double.NaN;
+        public double TakerSellVolume      = double.NaN;
+        public double TakerBuyQuoteVolume  = double.NaN;
+        public double TakerSellQuoteVolume = double.NaN;
+        public double TakerBuyTrades       = double.NaN;
+        public double TakerSellTrades      = double.NaN;
+        public double QuoteVolume          = double.NaN;
+        public double OpenInterestOpen              = double.NaN;
+        public double OpenInterestHigh              = double.NaN;
+        public double OpenInterestLow               = double.NaN;
+        public double OpenInterestClose             = double.NaN;
+        public double FundingRateOpen               = double.NaN;
+        public double FundingRateHigh               = double.NaN;
+        public double FundingRateLow                = double.NaN;
+        public double FundingRateClose              = double.NaN;
+        public double GlobalAccountLongPercent      = double.NaN;
+        public double GlobalAccountShortPercent     = double.NaN;
+        public double GlobalAccountLongShortRatio   = double.NaN;
+        public double TopPositionLongPercent        = double.NaN;
+        public double TopPositionShortPercent       = double.NaN;
+        public double TopPositionLongShortRatio     = double.NaN;
+        public double TopAccountLongPercent         = double.NaN;
+        public double TopAccountShortPercent        = double.NaN;
+        public double TopAccountLongShortRatio      = double.NaN;
+        public double LiquidationLongUsd            = double.NaN;
+        public double LiquidationShortUsd           = double.NaN;
+        public double BinancePremiumIndexOpen       = double.NaN;
+        public double BinancePremiumIndexHigh       = double.NaN;
+        public double BinancePremiumIndexLow        = double.NaN;
+        public double BinancePremiumIndexClose      = double.NaN;
+    }
+
+    public class {{ class_name }} : QCAlgorithm
+    {
+        // ── Composite weights (one per factor) ──
+        private static readonly double[] _weights = new double[] { {{ weights|join(", ") }} };
+
+        // ── Selection rule ──
+        private const string RankMode = "{{ rank_mode }}";          // "N" or "percent"
+        private const double RankValue = {{ rank_value }};
+        private const string StrategyType = "{{ strategy_type }}";   // long_only / short_only / neutral
+        private const int RebalanceBars = {{ rebalance_bars }};
+        private const bool SubscribeFeatures = {{ "true" if subscribe_features else "false" }};
+
+        // ── Tradable universe (lowercase pairs) ──
+        private static readonly string[] AllSymbols = new string[] {
+            {%- for s in all_symbols %}
+            "{{ s }}"{% if not loop.last %},{% endif %}
+            {%- endfor %}
+        };
+
+        // pair (UPPER) → tradable CryptoFuture Symbol (target of SetHoldings/Liquidate)
+        private readonly Dictionary<string, Symbol> _tradable = new Dictionary<string, Symbol>();
+        // pair (UPPER) → close-price ring buffer
+        private readonly Dictionary<string, Queue<double>> _priceBuf = new Dictionary<string, Queue<double>>();
+        // pair (UPPER) → merged OHLCV+feature bar
+        private readonly Dictionary<string, LiveFactorBar> _merged = new Dictionary<string, LiveFactorBar>();
+
+        // ── Factor states (one Dictionary<pair, State> per factor) ──
+        {%- for f in factors %}
+        private readonly Dictionary<string, FactorState_F{{ f.factor_index }}> _f{{ f.factor_index }}States = new Dictionary<string, FactorState_F{{ f.factor_index }}>();
+        {%- endfor %}
+
+        private int _barsSinceRebalance = 0;
+        private int _maxRequiredBars = 1;
+
+        public override void Initialize()
+        {
+            SetStartDate({{ start_year }}, {{ start_month }}, {{ start_day }});
+            // Live mode runs forward from "now"; no SetEndDate.
+            SetCash({{ initial_cash }});
+            SetTimeZone(TimeZones.Utc);
+
+            var resolution = Resolution.{{ lean_resolution }};
+
+            // Determine max factor lookback (per-factor PRICE_WINDOW_EXPR).
+            {%- for f in factors %}
+            {
+                var s = new FactorState_F{{ f.factor_index }}();
+                s.InitParams(this);
+                _maxRequiredBars = Math.Max(_maxRequiredBars, s.RequiredBars());
+            }
+            {%- endfor %}
+
+            foreach (var sym in AllSymbols)
+            {
+                var pair = sym.ToUpperInvariant();
+
+                // Tradable security — orders route to Binance USD-M via binance_direct.
+                var future = AddCryptoFuture(pair, resolution, Market.Binance, fillForward: true);
+                _tradable[pair] = future.Symbol;
+
+                {%- if subscribe_features %}
+                // Feature stream carrier (DQH reflection-fills it from market_features).
+                AddData<MatchXKlineWithCoinglassBar>(pair, resolution);
+                {%- endif %}
+
+                _priceBuf[pair] = new Queue<double>();
+                _merged[pair] = new LiveFactorBar();
+                {%- for f in factors %}
+                {
+                    var s = new FactorState_F{{ f.factor_index }}();
+                    s.InitParams(this);
+                    _f{{ f.factor_index }}States[pair] = s;
+                }
+                {%- endfor %}
+            }
+
+            // Best-effort warm-up. NOTE: binance_direct has no history provider, so
+            // this does not backfill; buffers fill forward from live bars.
+            var warmupBars = _maxRequiredBars + 5;
+            SetWarmUp(warmupBars, resolution);
+
+            Log($"[INIT] {{ class_name }} factors={{ factors|length }} symbols={AllSymbols.Length} " +
+                $"weights=[{string.Join(",", _weights)}] rankMode={RankMode} rankValue={RankValue} " +
+                $"strategyType={StrategyType} rebalanceBars={RebalanceBars} features={SubscribeFeatures} warmupBars={warmupBars}");
+            {%- for f in factors %}
+            Log("[INIT] factor#{{ f.factor_index }} type={{ f.factor_type }} formula={{ f.factor_formula }}");
+            {%- endfor %}
+        }
+
+{%- if subscribe_features %}
+        private static double FeatVal(decimal d)
+        {
+            // MissingValue sentinel → NaN so the per-factor NaN guard skips the symbol.
+            return d <= MatchXKlineWithCoinglassBar.MissingValue + 1m ? double.NaN : (double)d;
+        }
+
+        private void MergeFeature(string pair, MatchXKlineWithCoinglassBar f)
+        {
+            if (!_merged.TryGetValue(pair, out var m)) return;
+            m.TakerBuyVolume       = FeatVal(f.TakerBuyVolume);
+            m.TakerSellVolume      = FeatVal(f.TakerSellVolume);
+            m.TakerBuyQuoteVolume  = FeatVal(f.TakerBuyQuoteVolume);
+            m.TakerSellQuoteVolume = FeatVal(f.TakerSellQuoteVolume);
+            m.TakerBuyTrades       = FeatVal(f.TakerBuyTrades);
+            m.TakerSellTrades      = FeatVal(f.TakerSellTrades);
+            var tbq = FeatVal(f.TakerBuyQuoteVolume);
+            var tsq = FeatVal(f.TakerSellQuoteVolume);
+            m.QuoteVolume = (double.IsNaN(tbq) || double.IsNaN(tsq)) ? double.NaN : tbq + tsq;
+            m.OpenInterestOpen            = FeatVal(f.OpenInterestOpen);
+            m.OpenInterestHigh            = FeatVal(f.OpenInterestHigh);
+            m.OpenInterestLow             = FeatVal(f.OpenInterestLow);
+            m.OpenInterestClose           = FeatVal(f.OpenInterestClose);
+            m.FundingRateOpen             = FeatVal(f.FundingRateOpen);
+            m.FundingRateHigh             = FeatVal(f.FundingRateHigh);
+            m.FundingRateLow              = FeatVal(f.FundingRateLow);
+            m.FundingRateClose            = FeatVal(f.FundingRateClose);
+            m.GlobalAccountLongPercent    = FeatVal(f.GlobalAccountLongPercent);
+            m.GlobalAccountShortPercent   = FeatVal(f.GlobalAccountShortPercent);
+            m.GlobalAccountLongShortRatio = FeatVal(f.GlobalAccountLongShortRatio);
+            m.TopPositionLongPercent      = FeatVal(f.TopPositionLongPercent);
+            m.TopPositionShortPercent     = FeatVal(f.TopPositionShortPercent);
+            m.TopPositionLongShortRatio   = FeatVal(f.TopPositionLongShortRatio);
+            m.TopAccountLongPercent       = FeatVal(f.TopAccountLongPercent);
+            m.TopAccountShortPercent      = FeatVal(f.TopAccountShortPercent);
+            m.TopAccountLongShortRatio    = FeatVal(f.TopAccountLongShortRatio);
+            m.LiquidationLongUsd          = FeatVal(f.LiquidationLongUsd);
+            m.LiquidationShortUsd         = FeatVal(f.LiquidationShortUsd);
+            m.BinancePremiumIndexOpen     = FeatVal(f.BinancePremiumIndexOpen);
+            m.BinancePremiumIndexHigh     = FeatVal(f.BinancePremiumIndexHigh);
+            m.BinancePremiumIndexLow      = FeatVal(f.BinancePremiumIndexLow);
+            m.BinancePremiumIndexClose    = FeatVal(f.BinancePremiumIndexClose);
+        }
+{%- endif %}
+
+        public override void OnData(Slice slice)
+        {
+{%- if subscribe_features %}
+            // Merge latest features first so the kline tick sees current feature columns.
+            foreach (var kv in slice.Get<MatchXKlineWithCoinglassBar>())
+                MergeFeature(kv.Key.Value.ToUpperInvariant(), kv.Value);
+{%- endif %}
+
+            // Drive on price bars: update merged OHLCV, push close, advance factor state.
+            foreach (var kv in slice.Bars)
+            {
+                var pair = kv.Key.Value.ToUpperInvariant();
+                if (!_priceBuf.ContainsKey(pair)) continue;
+                var bar = kv.Value;
+
+                var m = _merged[pair];
+                m.Open = bar.Open; m.High = bar.High; m.Low = bar.Low; m.Close = bar.Close; m.Volume = bar.Volume;
+
+                var pBuf = _priceBuf[pair];
+                pBuf.Enqueue((double)bar.Close);
+                if (pBuf.Count > _maxRequiredBars) pBuf.Dequeue();
+
+                {%- for f in factors %}
+                if (_f{{ f.factor_index }}States.TryGetValue(pair, out var st{{ f.factor_index }}))
+                    st{{ f.factor_index }}.UpdateBar(m, _maxRequiredBars);
+                {%- endfor %}
+            }
+
+            if (IsWarmingUp) return;
+
+            _barsSinceRebalance++;
+            if (_barsSinceRebalance < RebalanceBars) return;
+            _barsSinceRebalance = 0;
+
+            Rebalance();
+        }
+
+        private void Rebalance()
+        {
+            // ── Step 1: collect raw factor signals for every warmed-up symbol ──
+            var rawByFactor = new Dictionary<string, double>[_weights.Length];
+            for (int i = 0; i < _weights.Length; i++) rawByFactor[i] = new Dictionary<string, double>();
+
+            var candidates = new List<string>();
+            foreach (var pair in _tradable.Keys)
+            {
+                var pBuf = _priceBuf[pair];
+                if (pBuf.Count < _maxRequiredBars) continue;   // not warmed up yet
+
+                var prices = pBuf.ToArray();
+                bool allOk = true;
+                {%- for f in factors %}
+                if (!_f{{ f.factor_index }}States[pair].Compute(prices, out var raw{{ f.factor_index }})) { allOk = false; }
+                {%- endfor %}
+                if (!allOk) continue;
+                {%- for f in factors %}
+                rawByFactor[{{ f.factor_index }}][pair] = raw{{ f.factor_index }};
+                {%- endfor %}
+                candidates.Add(pair);
+            }
+
+            if (candidates.Count == 0) { Liquidate(); return; }
+
+            // ── Step 2: per-factor cross-sectional z-score, then weighted composite ──
+            var composite = new Dictionary<string, double>();
+            for (int i = 0; i < _weights.Length; i++)
+            {
+                var vals = rawByFactor[i];
+                double mean = vals.Values.Average();
+                double var2 = vals.Values.Select(v => (v - mean) * (v - mean)).Average();
+                double std = Math.Sqrt(Math.Max(var2, 1e-18));
+                if (std < 1e-12) std = 1.0;   // all equal → contribute 0
+                foreach (var pair in candidates)
+                {
+                    double z = (vals[pair] - mean) / std;
+                    if (!composite.ContainsKey(pair)) composite[pair] = 0.0;
+                    composite[pair] += _weights[i] * z;
+                }
+            }
+
+            // ── Step 3: rank and pick baskets ──
+            var ranked = candidates.OrderByDescending(s => composite[s]).ToList();
+            int k = RankMode == "percent"
+                ? Math.Max(1, (int)Math.Round(ranked.Count * RankValue / 100.0))
+                : Math.Min((int)RankValue, ranked.Count / 2);
+
+            var longSet = new HashSet<string>();
+            var shortSet = new HashSet<string>();
+            if (StrategyType == "long_only" || StrategyType == "neutral")
+                foreach (var s in ranked.Take(k)) longSet.Add(s);
+            if (StrategyType == "short_only" || StrategyType == "neutral")
+                foreach (var s in ranked.AsEnumerable().Reverse().Take(k)) shortSet.Add(s);
+            shortSet.ExceptWith(longSet);
+
+            // ── Step 4: liquidate stale positions, then size new ones equally ──
+            foreach (var h in Portfolio.Values.Where(h => h.Invested).ToList())
+            {
+                var hp = h.Symbol.Value.ToUpperInvariant();
+                if (!longSet.Contains(hp) && !shortSet.Contains(hp))
+                    Liquidate(h.Symbol);
+            }
+
+            int total = longSet.Count + shortSet.Count;
+            if (total == 0) return;
+            decimal lw = longSet.Count > 0 ? 1.0m / total : 0m;
+            decimal sw = shortSet.Count > 0 ? -1.0m / total : 0m;
+            foreach (var s in longSet)  SetHoldings(_tradable[s], lw);
+            foreach (var s in shortSet) SetHoldings(_tradable[s], sw);
+
+            Log($"[REBALANCE] {Time:yyyy-MM-dd} candidates={candidates.Count} k={k} long={longSet.Count} short={shortSet.Count}");
+        }
+
+        // ════════════════════════════════════════════════════════════════════
+        // Factor state classes (one per factor) — byte-identical to the backtest
+        // composite; each holds per-symbol state and reads a LiveFactorBar.
+        // ════════════════════════════════════════════════════════════════════
+{% for f in factors %}
+        private class FactorState_F{{ f.factor_index }}
+        {
+            // ── factor parameter / state fields ──
+{{ f.param_fields|indent(12, True) }}
+            // ── extra column buffers ──
+{{ f.extra_buf_fields|indent(12, True) }}
+
+            public void InitParams({{ class_name }} algo)
+            {
+{{ f.factor_init|indent(16, True) }}
+            }
+
+            public int RequiredBars() => ({{ f.price_window_expr }});
+
+            public void UpdateBar(LiveFactorBar bar, int requiredBars)
+            {
+{{ f.extra_buf_enqueue|indent(16, True) }}
+{{ f.extra_buf_dequeue|indent(16, True) }}
+            }
+
+            public bool Compute(double[] prices, out double rawSignal)
+            {
+                rawSignal = 0.0;
+{{ f.extra_buf_toarray|indent(16, True) }}
+{{ f.compute_body|indent(16, True) }}
+            }
+        }
+{% endfor %}
+    }
+}
