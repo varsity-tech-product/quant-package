@@ -14,3 +14,6 @@ quantkit/live/logs/
 /style_attribution.png
 /style_exposure.json
 /style_roll_corr.csv
+
+# rendered live C# strategies (example/launcher output)
+_live_strategy_out/
